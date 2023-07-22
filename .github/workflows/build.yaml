@@ -1,0 +1,15 @@
+name: Build
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: denoland/setup-deno@v1.1.1
+        with:
+          deno-version: v1.x
+      - run: deno fmt --ignore=npm --check
+      - run: deno lint --ignore=npm
+      - run: deno test --ignore=npm

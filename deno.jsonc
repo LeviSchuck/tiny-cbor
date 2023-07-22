@@ -1,0 +1,12 @@
+{
+  "tasks": {
+    "dev": "deno run --watch main.ts",
+    "npm": "deno run --allow-env --allow-read --allow-write --allow-run scripts/npm.ts"
+  },
+  "lint": {
+    "exclude": ["npm"]
+  },
+  "fmt": {
+    "exclude": ["npm"]
+  }
+}
