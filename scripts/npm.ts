@@ -14,7 +14,7 @@ await build({
     // package.json properties
     name: "@levischuck/tiny-cbor",
     version: Deno.args[0],
-    description: "Intermediate representation and transformers for documents",
+    description: "Tiny CBOR library",
     license: "MIT",
     repository: {
       type: "git",
