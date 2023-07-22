@@ -10,6 +10,6 @@ jobs:
       - uses: denoland/setup-deno@v1.1.1
         with:
           deno-version: v1.x
-      - run: deno fmt --ignore=npm --check
-      - run: deno lint --ignore=npm
-      - run: deno test --ignore=npm
+      - run: deno fmt --check
+      - run: deno lint
+      - run: deno test
