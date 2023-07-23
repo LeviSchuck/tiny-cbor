@@ -187,8 +187,8 @@ function decodeNext(data: Uint8Array, index: number): [CBORType, number] {
           return decodeFloat32(data, index);
         case 27: // IEEE 754 Double-Precision Float (64 bits follow)
           return decodeFloat64(data, index);
-        // 28-30: Reserved, not well-formed in the present document
-        // 31: "break" stop code for indefinite-length items 
+          // 28-30: Reserved, not well-formed in the present document
+          // 31: "break" stop code for indefinite-length items
       }
     }
   }
@@ -228,13 +228,35 @@ function encodeSimple(data: boolean | null | undefined): number {
   throw new Error("Internal error");
 }
 
-function encodeNumber(data: number | bigint): number[] {
+function encodeFloat(data: number): Uint8Array {
+  if (Math.fround(data) == data) {
+    // Float32
+    const output = new Uint8Array(5);
+    output[0] = 0xfa;
+    const view = new DataView(output.buffer);
+    view.setFloat32(1, data, false);
+    return output;
+  } else {
+    // Float64
+    const output = new Uint8Array(9);
+    output[0] = 0xfb;
+    const view = new DataView(output.buffer);
+    view.setFloat64(1, data, false);
+    return output;
+  }
+}
+
+function encodeNumber(data: number | bigint): (number | Uint8Array)[] {
   if (typeof data == "number") {
-    if (data < 0) {
-      return encodeLength(MAJOR_TYPE_NEGATIVE_INTEGER, Math.abs(data));
-    } else {
-      return encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, data);
+    if (Number.isSafeInteger(data)) {
+      // Encode integer
+      if (data < 0) {
+        return encodeLength(MAJOR_TYPE_NEGATIVE_INTEGER, Math.abs(data));
+      } else {
+        return encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, data);
+      }
     }
+    return [encodeFloat(data)];
   } else {
     if (data < 0n) {
       return encodeLength(MAJOR_TYPE_NEGATIVE_INTEGER, data * -1n);
