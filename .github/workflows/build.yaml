@@ -25,7 +25,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - name: npm build
         if: startsWith(github.ref, 'refs/tags/')
-        run: deno run -A ./scripts/build_npm.ts ${{steps.get_tag_version.outputs.TAG_VERSION}}
+        run: deno task npm ${{steps.get_tag_version.outputs.TAG_VERSION}}
       - name: npm publish
         if: startsWith(github.ref, 'refs/tags/')
         env:
