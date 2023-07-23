@@ -33,16 +33,19 @@ export function decodeLength(
 }
 
 export type MajorType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
-export const MAJOR_TYPE_UNSIGNED_INTEGER : MajorType = 0;
-export const MAJOR_TYPE_NEGATIVE_INTEGER : MajorType = 1;
-export const MAJOR_TYPE_BYTE_STRING : MajorType = 2;
-export const MAJOR_TYPE_TEXT_STRING : MajorType = 3;
-export const MAJOR_TYPE_ARRAY : MajorType = 4;
-export const MAJOR_TYPE_MAP : MajorType = 5;
-export const MAJOR_TYPE_TAG : MajorType = 6;
-export const MAJOR_TYPE_SIMPLE_OR_FLOAT : MajorType = 7;
+export const MAJOR_TYPE_UNSIGNED_INTEGER: MajorType = 0;
+export const MAJOR_TYPE_NEGATIVE_INTEGER: MajorType = 1;
+export const MAJOR_TYPE_BYTE_STRING: MajorType = 2;
+export const MAJOR_TYPE_TEXT_STRING: MajorType = 3;
+export const MAJOR_TYPE_ARRAY: MajorType = 4;
+export const MAJOR_TYPE_MAP: MajorType = 5;
+export const MAJOR_TYPE_TAG: MajorType = 6;
+export const MAJOR_TYPE_SIMPLE_OR_FLOAT: MajorType = 7;
 
-export function encodeLength(major: MajorType, argument: number | bigint): number[] {
+export function encodeLength(
+  major: MajorType,
+  argument: number | bigint,
+): number[] {
   const majorEncoded = major << 5;
   if (argument < 0) {
     throw new Error("CBOR Data Item argument must not be negative");
@@ -53,12 +56,12 @@ export function encodeLength(major: MajorType, argument: number | bigint): numbe
   // is unreliable in javascript.
   // https://tc39.es/ecma262/#sec-bitwise-shift-operators
   // Bit shifting operations result in 32 bit signed numbers
-  let bigintArgument : bigint;
-  if (typeof argument == 'number') {
+  let bigintArgument: bigint;
+  if (typeof argument == "number") {
     if (Math.round(argument) != argument) {
       throw new Error("CBOR Data Item argument must be an integer");
     }
-    bigintArgument = BigInt(argument)
+    bigintArgument = BigInt(argument);
   } else {
     bigintArgument = argument;
   }
@@ -84,12 +87,12 @@ export function encodeLength(major: MajorType, argument: number | bigint): numbe
   } else if (argument < 4294967295) {
     return [
       majorEncoded | 26,
-      ...buffer.slice(4)
+      ...buffer.slice(4),
     ];
   } else {
     return [
       majorEncoded | 27,
-      ...buffer
+      ...buffer,
     ];
   }
 }
