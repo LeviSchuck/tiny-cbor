@@ -1,6 +1,17 @@
-import { decodeLength } from "./cbor_internal.ts";
+import {
+  decodeLength,
+  encodeLength,
+  MAJOR_TYPE_ARRAY,
+  MAJOR_TYPE_BYTE_STRING,
+  MAJOR_TYPE_MAP,
+  MAJOR_TYPE_NEGATIVE_INTEGER,
+  MAJOR_TYPE_SIMPLE_OR_FLOAT,
+  MAJOR_TYPE_TEXT_STRING,
+  MAJOR_TYPE_UNSIGNED_INTEGER,
+} from "./cbor_internal.ts";
 export type SimpleCBORType =
   | number
+  | bigint
   | string
   | Uint8Array
   | boolean
@@ -126,25 +137,25 @@ function decodeNext(data: Uint8Array, index: number): [CBORType, number] {
   const majorType = byte >> 5;
   const argument = byte & 0x1f;
   switch (majorType) {
-    case 0: {
+    case MAJOR_TYPE_UNSIGNED_INTEGER: {
       return decodeUnsignedInteger(data, argument, index);
     }
-    case 1: {
+    case MAJOR_TYPE_NEGATIVE_INTEGER: {
       return decodeNegativeInteger(data, argument, index);
     }
-    case 2: {
+    case MAJOR_TYPE_BYTE_STRING: {
       return decodeByteString(data, argument, index);
     }
-    case 3: {
+    case MAJOR_TYPE_TEXT_STRING: {
       return decodeString(data, argument, index);
     }
-    case 4: {
+    case MAJOR_TYPE_ARRAY: {
       return decodeArray(data, argument, index);
     }
-    case 5: {
+    case MAJOR_TYPE_MAP: {
       return decodeMap(data, argument, index);
     }
-    case 7: {
+    case MAJOR_TYPE_SIMPLE_OR_FLOAT: {
       switch (argument) {
         case 20:
           return [false, 1];
@@ -178,4 +189,116 @@ export function decodeCBOR(data: Uint8Array): CBORType {
     );
   }
   return value;
+}
+
+function encodeSimple(data: boolean | null | undefined): number {
+  if (data === true) {
+    return 0xf5;
+  } else if (data === false) {
+    return 0xf4;
+  } else if (data === null) {
+    return 0xf6;
+  } else if (data === undefined) {
+    return 0xf7;
+  }
+  throw new Error("Internal error");
+}
+
+function encodeNumber(data: number | bigint): number[] {
+  if (typeof data == "number") {
+    if (data < 0) {
+      return encodeLength(MAJOR_TYPE_NEGATIVE_INTEGER, Math.abs(data));
+    } else {
+      return encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, data);
+    }
+  } else {
+    if (data < 0n) {
+      return encodeLength(MAJOR_TYPE_NEGATIVE_INTEGER, data * -1n);
+    } else {
+      return encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, data);
+    }
+  }
+}
+
+const ENCODER = new TextEncoder();
+
+function encodeString(data: string): (number | Uint8Array)[] {
+  return [
+    new Uint8Array(encodeLength(MAJOR_TYPE_TEXT_STRING, data.length)),
+    ENCODER.encode(data),
+  ];
+}
+
+function encodeBytes(data: Uint8Array): (number | Uint8Array)[] {
+  return [
+    new Uint8Array(encodeLength(MAJOR_TYPE_BYTE_STRING, data.length)),
+    data,
+  ];
+}
+
+function encodeArray(data: CBORType[]): (number | Uint8Array)[] {
+  const output: (number | Uint8Array)[] = [];
+  output.push(new Uint8Array(encodeLength(MAJOR_TYPE_ARRAY, data.length)));
+  for (const element of data) {
+    output.push(...encodePartialCBOR(element));
+  }
+  return output;
+}
+
+function encodeMap(
+  data: Map<string | number, CBORType>,
+): (number | Uint8Array)[] {
+  const output: (number | Uint8Array)[] = [];
+  output.push(new Uint8Array(encodeLength(MAJOR_TYPE_MAP, data.size)));
+  for (const [key, value] of data.entries()) {
+    output.push(...encodePartialCBOR(key));
+    output.push(...encodePartialCBOR(value));
+  }
+  return output;
+}
+
+function encodePartialCBOR(data: CBORType): (number | Uint8Array)[] {
+  if (typeof data == "boolean" || data === null || data == undefined) {
+    return [encodeSimple(data)];
+  }
+  if (typeof data == "number" || typeof data == "bigint") {
+    return encodeNumber(data);
+  }
+  if (typeof data == "string") {
+    return encodeString(data);
+  }
+  if (data instanceof Uint8Array) {
+    return encodeBytes(data);
+  }
+  if (Array.isArray(data)) {
+    return encodeArray(data);
+  }
+  if (data instanceof Map) {
+    return encodeMap(data);
+  }
+  throw new Error("Not implemented");
+}
+
+export function encodeCBOR(data: CBORType): Uint8Array {
+  const results = encodePartialCBOR(data);
+  let length = 0;
+  for (const result of results) {
+    if (typeof result == "number") {
+      length += 1;
+    } else {
+      length += result.length;
+    }
+  }
+  const output = new Uint8Array(length);
+  let index = 0;
+  for (const result of results) {
+    if (typeof result == "number") {
+      output[index] = result;
+      index += 1;
+    } else {
+      output.set(result, index);
+      index += result.length;
+    }
+  }
+  return output;
 }

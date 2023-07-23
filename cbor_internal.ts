@@ -74,17 +74,21 @@ export function encodeLength(
     bigintArgument = bigintArgument - 1n;
   }
 
+  if (bigintArgument > 18446744073709551615n) {
+    throw new Error("CBOR number out of range");
+  }
+
   // Encode into 64 bits and extract the tail
   const buffer = new Uint8Array(8);
   const view = new DataView(buffer.buffer);
   view.setBigUint64(0, bigintArgument, false);
-  if (argument <= 23) {
+  if (bigintArgument <= 23) {
     return [majorEncoded | buffer[7]];
-  } else if (argument < 255) {
+  } else if (bigintArgument <= 255) {
     return [majorEncoded | 24, buffer[7]];
-  } else if (argument < 65535) {
+  } else if (bigintArgument <= 65535) {
     return [majorEncoded | 25, ...buffer.slice(6)];
-  } else if (argument < 4294967295) {
+  } else if (bigintArgument <= 4294967295) {
     return [
       majorEncoded | 26,
       ...buffer.slice(4),

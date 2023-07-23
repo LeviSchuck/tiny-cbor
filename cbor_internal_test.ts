@@ -54,6 +54,21 @@ Deno.test({
       [0x38, 0x63],
       "Negative 100",
     );
+    assertEquals(
+      encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, 255),
+      [0x18, 0xff],
+      "Positive 255",
+    );
+    assertEquals(
+      encodeLength(MAJOR_TYPE_NEGATIVE_INTEGER, 255),
+      [0x38, 0xfe],
+      "Negative 255",
+    );
+    assertEquals(
+      encodeLength(MAJOR_TYPE_NEGATIVE_INTEGER, 256),
+      [0x38, 0xff],
+      "Negative 256",
+    );
     assertEquals(encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, 1000), [
       0x19,
       0x03,
@@ -82,6 +97,51 @@ Deno.test({
       0x10,
       0x00,
     ], "Positive 1000000000000");
+    assertEquals(
+      encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, 18446744073709551615n),
+      [
+        0x1b,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+      ],
+      "Positive 18446744073709551615",
+    );
+    assertEquals(
+      encodeLength(MAJOR_TYPE_NEGATIVE_INTEGER, 18446744073709551615n),
+      [
+        0x3b,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xfe,
+      ],
+      "Negative 18446744073709551615",
+    );
+    assertEquals(
+      encodeLength(MAJOR_TYPE_NEGATIVE_INTEGER, 18446744073709551616n),
+      [
+        0x3b,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+      ],
+      "Negative 18446744073709551616",
+    );
   },
 });
 
@@ -118,5 +178,8 @@ Deno.test({
     assertThrows(() => {
       encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, 1.5);
     }, "No fractional numbers");
+    assertThrows(() => {
+      encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, 18446744073709551616n);
+    }, "Maximum supported number");
   },
 });
