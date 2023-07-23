@@ -2,7 +2,12 @@ import {
   assertEquals,
   assertThrows,
 } from "https://deno.land/std@0.194.0/testing/asserts.ts";
-import { decodeLength } from "./cbor_internal.ts";
+import {
+  decodeLength,
+  encodeLength,
+  MAJOR_TYPE_NEGATIVE_INTEGER,
+  MAJOR_TYPE_UNSIGNED_INTEGER,
+} from "./cbor_internal.ts";
 
 Deno.test({
   name: "Decodes lengths properly",
@@ -19,22 +24,162 @@ Deno.test({
 });
 
 Deno.test({
-  name: "Rejects improper lengths lengths properly",
+  name: "Encodes lengths properly",
+  fn() {
+    assertEquals(encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, 0), [0x00], "Zero");
+    assertEquals(
+      encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, 1),
+      [0x01],
+      "Positive 1",
+    );
+    assertEquals(
+      encodeLength(MAJOR_TYPE_NEGATIVE_INTEGER, 1),
+      [0x20],
+      "Negative 1",
+    );
+    assertEquals(
+      encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, 10),
+      [0x0a],
+      "Positive 10",
+    );
+    assertEquals(encodeLength(MAJOR_TYPE_NEGATIVE_INTEGER, 10), [0x29]),
+      "Negative 10";
+    assertEquals(
+      encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, 100),
+      [0x18, 0x64],
+      "Positive 100",
+    );
+    assertEquals(
+      encodeLength(MAJOR_TYPE_NEGATIVE_INTEGER, 100),
+      [0x38, 0x63],
+      "Negative 100",
+    );
+    assertEquals(
+      encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, 255),
+      [0x18, 0xff],
+      "Positive 255",
+    );
+    assertEquals(
+      encodeLength(MAJOR_TYPE_NEGATIVE_INTEGER, 255),
+      [0x38, 0xfe],
+      "Negative 255",
+    );
+    assertEquals(
+      encodeLength(MAJOR_TYPE_NEGATIVE_INTEGER, 256),
+      [0x38, 0xff],
+      "Negative 256",
+    );
+    assertEquals(encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, 1000), [
+      0x19,
+      0x03,
+      0xe8,
+    ], "Positive 1000");
+    assertEquals(encodeLength(MAJOR_TYPE_NEGATIVE_INTEGER, 1000), [
+      0x39,
+      0x03,
+      0xe7,
+    ], "Negative 1000");
+    assertEquals(encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, 1000000), [
+      0x1a,
+      0x00,
+      0x0f,
+      0x42,
+      0x40,
+    ], "Positive 1000000");
+    assertEquals(encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, 1000000000000), [
+      0x1b,
+      0x00,
+      0x00,
+      0x00,
+      0xe8,
+      0xd4,
+      0xa5,
+      0x10,
+      0x00,
+    ], "Positive 1000000000000");
+    assertEquals(
+      encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, 18446744073709551615n),
+      [
+        0x1b,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+      ],
+      "Positive 18446744073709551615",
+    );
+    assertEquals(
+      encodeLength(MAJOR_TYPE_NEGATIVE_INTEGER, 18446744073709551615n),
+      [
+        0x3b,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xfe,
+      ],
+      "Negative 18446744073709551615",
+    );
+    assertEquals(
+      encodeLength(MAJOR_TYPE_NEGATIVE_INTEGER, 18446744073709551616n),
+      [
+        0x3b,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+      ],
+      "Negative 18446744073709551616",
+    );
+  },
+});
+
+Deno.test({
+  name: "Rejects lengths that do not decode",
   fn() {
     assertThrows(() => {
       decodeLength(new Uint8Array([0x18]), 24, 0);
-    });
+    }, "Requires one more byte");
     assertThrows(() => {
       decodeLength(new Uint8Array([0x18, 0]), 24, 0);
-    });
+    }, "Requires one more byte, number must be > 23");
     assertThrows(() => {
       decodeLength(new Uint8Array([0x19]), 25, 0);
-    });
+    }, "Requires two more bytes, two missing");
     assertThrows(() => {
       decodeLength(new Uint8Array([0x19, 0]), 25, 0);
-    });
+    }, "Requires two more bytes, one missing");
     assertThrows(() => {
       decodeLength(new Uint8Array([0x19, 0, 0]), 25, 0);
-    });
+    }, "Requires two more bytes, number must be > 23");
+  },
+});
+
+Deno.test({
+  name: "Rejects that do not encode",
+  fn() {
+    assertThrows(() => {
+      encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, -1);
+    }, "No negative numbers");
+    assertThrows(() => {
+      encodeLength(MAJOR_TYPE_NEGATIVE_INTEGER, 0);
+    }, "No negative zero");
+    assertThrows(() => {
+      encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, 1.5);
+    }, "No fractional numbers");
+    assertThrows(() => {
+      encodeLength(MAJOR_TYPE_UNSIGNED_INTEGER, 18446744073709551616n);
+    }, "Maximum supported number");
   },
 });
