@@ -15,6 +15,8 @@ This implementation does not support indefinite length maps, arrays, text
 strings, or byte strings. It also does not support half precision floating point
 numbers.
 
+It currently does not decode numbers > 65535.
+
 Maps only support strings or numbers as keys, while CBOR allows more than this,
 it is difficult to implement in lightweight JavaScript. Maps that have duplicate
 keys will result in an error during decoding.
