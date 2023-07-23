@@ -19,6 +19,7 @@ import {
   WEBAUTHN_REGISTRATION_PAYLOAD,
   YUBIKEY_WEBAUTHN_PAYLOAD,
 } from "./test_data.ts";
+import { decodeHex } from "./test_util.ts";
 
 Deno.test({
   name: "Rejects empty input",
@@ -557,5 +558,29 @@ Deno.test({
   name: "Encodes undefined",
   fn() {
     assertEquals(encodeCBOR(undefined), new Uint8Array([0b111_10111]));
+  },
+});
+Deno.test({
+  name: "Decodes 32 bit floating point number",
+  fn() {
+    assertEquals(decodeCBOR(decodeHex("fa47c35000")), 100000.0);
+  },
+});
+Deno.test({
+  name: "Encodes 32 bit floating point number",
+  fn() {
+    assertEquals(encodeCBOR(3.4028234663852886e+38), decodeHex("fa7f7fffff"));
+  },
+});
+Deno.test({
+  name: "Decodes 64 bit floating point number",
+  fn() {
+    assertEquals(decodeCBOR(decodeHex("fb7e37e43c8800759c")), 1.0e+300);
+  },
+});
+Deno.test({
+  name: "Encode 64 bit floating point number",
+  fn() {
+    assertEquals(encodeCBOR(-4.1), decodeHex("fbc010666666666666"));
   },
 });
