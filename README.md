@@ -5,7 +5,8 @@ JavaScript structures:
 
 - Maps with keys as strings or numbers with `CBORType` values
 - Arrays of `CBORType` values
-- numbers
+- integers
+- float32 and float64
 - strings
 - byte strings as `Uint8Array`
 - booleans
