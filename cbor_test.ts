@@ -643,15 +643,27 @@ Deno.test({
     );
   },
 });
-
 Deno.test({
   name: "Rejects incomplete tagged items",
   fn() {
     assertThrows(() => {
-      decodeCBOR(decodeHex("c0"))
+      decodeCBOR(decodeHex("c0"));
     });
     assertThrows(() => {
-      decodeCBOR(decodeHex("c11a"))
+      decodeCBOR(decodeHex("c11a"));
     });
+  },
+});
+Deno.test({
+  name: "Encodes tagged items",
+  fn() {
+    assertEquals(
+      encodeCBOR(new CBORTag(0, "2013-03-21T20:04:00Z")),
+      decodeHex("c074323031332d30332d32315432303a30343a30305a"),
+    );
+    assertEquals(
+      encodeCBOR(new CBORTag(1, 1363896240)),
+      decodeHex("c11a514b67b0"),
+    );
   },
 });

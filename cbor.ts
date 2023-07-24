@@ -364,6 +364,13 @@ function encodeMap(
   return output;
 }
 
+function encodeTag(tag: CBORTag): (number | Uint8Array)[] {
+  return [
+    new Uint8Array(encodeLength(MAJOR_TYPE_TAG, tag.tag)),
+    ...encodePartialCBOR(tag.value),
+  ];
+}
+
 function encodePartialCBOR(data: CBORType): (number | Uint8Array)[] {
   if (typeof data == "boolean" || data === null || data == undefined) {
     return [encodeSimple(data)];
@@ -382,6 +389,9 @@ function encodePartialCBOR(data: CBORType): (number | Uint8Array)[] {
   }
   if (data instanceof Map) {
     return encodeMap(data);
+  }
+  if (data instanceof CBORTag) {
+    return encodeTag(data);
   }
   throw new Error("Not implemented");
 }

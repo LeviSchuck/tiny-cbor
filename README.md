@@ -3,7 +3,7 @@
 This minimal generic library decodes most useful CBOR structures into simple
 JavaScript structures:
 
-- Maps with keys as strings or numbers with `CBORType` values
+- Maps with keys as strings or numbers with `CBORType` values as a `Map`
 - Arrays of `CBORType` values
 - integers
 - float32 and float64
@@ -12,6 +12,7 @@ JavaScript structures:
 - byte strings as `Uint8Array`
 - booleans
 - null and undefined
+- tags as `CBORTag(tag, value)`
 
 ## Limitations
 
@@ -21,11 +22,13 @@ This implementation does not support:
 - half precision floating point numbers
 - integers outside the range of `[-9007199254740991, 9007199254740991]`, see
   [Number.MAX_SAFE_INTEGER](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER)
-- tags
+- native output to JSON
+- does not support generic objects, only `Map`s
 
 This implementation has the following constraints:
 
 - Map keys may only be strings or numbers
+- Tags are not interpreted
 
 ## Behavior
 
