@@ -32,6 +32,5 @@ This implementation has the following constraints:
 
 ## Behavior
 
-Maps that have duplicate keys will throw an error during decoding.
-Decoding data that is incomplete will throw an error during decoding.
-
+Maps that have duplicate keys will throw an error during decoding. Decoding data
+that is incomplete will throw an error during decoding.
