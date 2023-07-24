@@ -132,7 +132,26 @@ function decodeMap(
   return [result, consumedLength];
 }
 
+function decodeFloat16(data: Uint8Array, index: number): [number, number] {
+  if (index + 2 > data.length) {
+    throw new Error('CBOR stream ended before end of Float 16');
+  }
+  /*
+  +------------------------------+------------------------------------+
+   |Infinity                      | 0xf97c00                           |
+   +------------------------------+------------------------------------+
+   |NaN                           | 0xf97e00                           |
+   +------------------------------+------------------------------------+
+   |-Infinity                     | 0xf9fc00                           |
+   +------------------------------+------------------------------------+
+  */
+ throw new Error('Float16 data is unsupported');
+}
+
 function decodeFloat32(data: Uint8Array, index: number): [number, number] {
+  if (index + 5 > data.length) {
+    throw new Error('CBOR stream ended before end of Float 32');
+  }
   const view = new DataView(data.buffer, index);
   // Skip the first byte
   const result = view.getFloat32(1, false);
@@ -141,6 +160,9 @@ function decodeFloat32(data: Uint8Array, index: number): [number, number] {
 }
 
 function decodeFloat64(data: Uint8Array, index: number): [number, number] {
+  if (index + 9 > data.length) {
+    throw new Error('CBOR stream ended before end of Float 64');
+  }
   const view = new DataView(data.buffer, index);
   // Skip the first byte
   const result = view.getFloat64(1, false);
@@ -182,7 +204,8 @@ function decodeNext(data: Uint8Array, index: number): [CBORType, number] {
         case 23:
           return [undefined, 1];
         // 24: Simple value (value 32..255 in following byte)
-        // 25: IEEE 754 Half-Precision Float (16 bits follow)
+        case 25: // IEEE 754 Half-Precision Float (16 bits follow)
+          return decodeFloat16(data, index);
         case 26: // IEEE 754 Single-Precision Float (32 bits follow)
           return decodeFloat32(data, index);
         case 27: // IEEE 754 Double-Precision Float (64 bits follow)

@@ -7,28 +7,48 @@ export function decodeLength(
     return [argument, 1];
   }
   const remainingDataLength = data.length - index - 1;
+  const view = new DataView(data.buffer, index + 1);
+  let output : number | undefined;
+  let bytes = 0;
   switch (argument) {
     case 24: {
       if (remainingDataLength > 0) {
-        const value = data[index + 1];
-        if (value >= 24) {
-          return [value, 2];
-        }
+        output = view.getUint8(0);
+        bytes = 2;
       }
       break;
     }
     case 25: {
       if (remainingDataLength > 1) {
-        const value1 = data[index + 1];
-        const value2 = data[index + 2];
-        const value = (value1 << 8) | value2;
-        if (value >= 24) {
-          return [value, 3];
+        output = view.getUint16(0, false);
+        bytes = 3;
+      }
+      break;
+    }
+    case 26: {
+      if (remainingDataLength > 3) {
+        output = view.getUint32(0, false);
+        bytes = 5;
+      }
+      break;
+    }
+    case 27: {
+      if (remainingDataLength > 7) {
+        const bigOutput = view.getBigUint64(0, false);
+        // Bound it to [24, MAX_SAFE_INTEGER], where it is safe
+        // to encode as a javascript number
+        if (bigOutput >= 24n && bigOutput <= Number.MAX_SAFE_INTEGER) {
+          return [Number(bigOutput), 9];
         }
       }
       break;
     }
   }
+
+  if (output && output >= 24) {
+    return [output, bytes];
+  }
+
   throw new Error("Length not supported or not well formed");
 }
 
@@ -58,7 +78,7 @@ export function encodeLength(
   // Bit shifting operations result in 32 bit signed numbers
   let bigintArgument: bigint;
   if (typeof argument == "number") {
-    if (Math.round(argument) != argument) {
+    if (!Number.isInteger(argument)) {
       throw new Error("CBOR Data Item argument must be an integer");
     }
     bigintArgument = BigInt(argument);

@@ -573,6 +573,14 @@ Deno.test({
   },
 });
 Deno.test({
+  name: "Rejects incomplete 32 bit floating point number",
+  fn() {
+    assertThrows(() => {
+      decodeCBOR(decodeHex("fa7f7fff"));
+    })
+  },
+});
+Deno.test({
   name: "Decodes 64 bit floating point number",
   fn() {
     assertEquals(decodeCBOR(decodeHex("fb7e37e43c8800759c")), 1.0e+300);
@@ -582,5 +590,13 @@ Deno.test({
   name: "Encode 64 bit floating point number",
   fn() {
     assertEquals(encodeCBOR(-4.1), decodeHex("fbc010666666666666"));
+  },
+});
+Deno.test({
+  name: "Rejects incomplete 64 bit floating point number",
+  fn() {
+    assertThrows(() => {
+      decodeCBOR(decodeHex("fb7e37e43c880075"));
+    })
   },
 });
