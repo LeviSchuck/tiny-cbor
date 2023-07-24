@@ -2,7 +2,7 @@ import {
   assertEquals,
   assertThrows,
 } from "https://deno.land/std@0.194.0/testing/asserts.ts";
-import { decodeCBOR, decodePartialCBOR, encodeCBOR } from "./cbor.ts";
+import { CBORTag, decodeCBOR, decodePartialCBOR, encodeCBOR } from "./cbor.ts";
 import {
   APPLE_MACBOOK_WEBAUTHN_PAYLOAD,
   BYTES_HELLO_WORLD_CBOR,
@@ -627,6 +627,31 @@ Deno.test({
   fn() {
     assertThrows(() => {
       decodeCBOR(decodeHex("fb7e37e43c880075"));
+    });
+  },
+});
+Deno.test({
+  name: "Decodes tagged items",
+  fn() {
+    assertEquals(
+      decodeCBOR(decodeHex("c074323031332d30332d32315432303a30343a30305a")),
+      new CBORTag(0, "2013-03-21T20:04:00Z"),
+    );
+    assertEquals(
+      decodeCBOR(decodeHex("c11a514b67b0")),
+      new CBORTag(1, 1363896240),
+    );
+  },
+});
+
+Deno.test({
+  name: "Rejects incomplete tagged items",
+  fn() {
+    assertThrows(() => {
+      decodeCBOR(decodeHex("c0"))
+    });
+    assertThrows(() => {
+      decodeCBOR(decodeHex("c11a"))
     });
   },
 });
