@@ -1,17 +1,17 @@
 # Tiny CBOR
 
-This minimal generic library decodes most useful CBOR structures into simple
-JavaScript structures:
+This minimal generic library decodes and encodes most useful CBOR structures
+into simple JavaScript structures:
 
-- Maps with keys as strings or numbers with `CBORType` values as a `Map`
+- Maps with keys as `string`s or `number`s with `CBORType` values as a `Map`
 - Arrays of `CBORType` values
-- integers
-- float32 and float64
+- integers as `number`s
+- float32 and float64 as `number`s
 - float16 `NaN`, `Infinity`, `-Infinity`
-- strings
+- `string`s
 - byte strings as `Uint8Array`
 - booleans
-- null and undefined
+- `null` and `undefined`
 - tags as `CBORTag(tag, value)`
 
 ## Limitations
@@ -33,3 +33,5 @@ This implementation has the following constraints:
 ## Behavior
 
 Maps that have duplicate keys will throw an error during decoding.
+Decoding data that is incomplete will throw an error during decoding.
+
