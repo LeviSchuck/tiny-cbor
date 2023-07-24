@@ -8,7 +8,7 @@ export function decodeLength(
   }
   const remainingDataLength = data.length - index - 1;
   const view = new DataView(data.buffer, index + 1);
-  let output : number | undefined;
+  let output: number | undefined;
   let bytes = 0;
   switch (argument) {
     case 24: {

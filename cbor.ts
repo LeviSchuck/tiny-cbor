@@ -6,6 +6,7 @@ import {
   MAJOR_TYPE_MAP,
   MAJOR_TYPE_NEGATIVE_INTEGER,
   MAJOR_TYPE_SIMPLE_OR_FLOAT,
+  MAJOR_TYPE_TAG,
   MAJOR_TYPE_TEXT_STRING,
   MAJOR_TYPE_UNSIGNED_INTEGER,
 } from "./cbor_internal.ts";
@@ -133,24 +134,26 @@ function decodeMap(
 }
 
 function decodeFloat16(data: Uint8Array, index: number): [number, number] {
-  if (index + 2 > data.length) {
-    throw new Error('CBOR stream ended before end of Float 16');
+  if (index + 3 > data.length) {
+    throw new Error("CBOR stream ended before end of Float 16");
   }
-  /*
-  +------------------------------+------------------------------------+
-   |Infinity                      | 0xf97c00                           |
-   +------------------------------+------------------------------------+
-   |NaN                           | 0xf97e00                           |
-   +------------------------------+------------------------------------+
-   |-Infinity                     | 0xf9fc00                           |
-   +------------------------------+------------------------------------+
-  */
- throw new Error('Float16 data is unsupported');
+  const view = new DataView(data.buffer, index);
+  // Skip the first byte
+  const result = view.getUint16(1, false);
+  // A minimal selection of supported values
+  if (result == 0x7c00) {
+    return [Infinity, 3];
+  } else if (result == 0x7e00) {
+    return [NaN, 3];
+  } else if (result == 0xfc00) {
+    return [-Infinity, 3];
+  }
+  throw new Error("Float16 data is unsupported");
 }
 
 function decodeFloat32(data: Uint8Array, index: number): [number, number] {
   if (index + 5 > data.length) {
-    throw new Error('CBOR stream ended before end of Float 32');
+    throw new Error("CBOR stream ended before end of Float 32");
   }
   const view = new DataView(data.buffer, index);
   // Skip the first byte
@@ -161,7 +164,7 @@ function decodeFloat32(data: Uint8Array, index: number): [number, number] {
 
 function decodeFloat64(data: Uint8Array, index: number): [number, number] {
   if (index + 9 > data.length) {
-    throw new Error('CBOR stream ended before end of Float 64');
+    throw new Error("CBOR stream ended before end of Float 64");
   }
   const view = new DataView(data.buffer, index);
   // Skip the first byte
@@ -192,6 +195,9 @@ function decodeNext(data: Uint8Array, index: number): [CBORType, number] {
     }
     case MAJOR_TYPE_MAP: {
       return decodeMap(data, argument, index);
+    }
+    case MAJOR_TYPE_TAG: {
+      throw new Error("Unsupported");
     }
     case MAJOR_TYPE_SIMPLE_OR_FLOAT: {
       switch (argument) {
@@ -252,7 +258,9 @@ function encodeSimple(data: boolean | null | undefined): number {
 }
 
 function encodeFloat(data: number): Uint8Array {
-  if (Math.fround(data) == data) {
+  if (
+    Math.fround(data) == data || !Number.isFinite(data) || Number.isNaN(data)
+  ) {
     // Float32
     const output = new Uint8Array(5);
     output[0] = 0xfa;
