@@ -10,6 +10,22 @@ import {
   MAJOR_TYPE_TEXT_STRING,
   MAJOR_TYPE_UNSIGNED_INTEGER,
 } from "./cbor_internal.ts";
+
+export class CBORTag {
+  private tagId: number;
+  private tagValue: CBORType;
+  constructor(tag: number, value: CBORType) {
+    this.tagId = tag;
+    this.tagValue = value;
+  }
+  get tag(): number {
+    return this.tagId;
+  }
+  get value(): CBORType {
+    return this.tagValue;
+  }
+}
+
 export type SimpleCBORType =
   | number
   | bigint
@@ -21,6 +37,7 @@ export type SimpleCBORType =
 export type CBORType =
   | SimpleCBORType
   | CBORType[]
+  | CBORTag
   | Map<string | number, CBORType>;
 
 function decodeUnsignedInteger(
@@ -173,6 +190,19 @@ function decodeFloat64(data: Uint8Array, index: number): [number, number] {
   return [result, 9];
 }
 
+function decodeTag(
+  data: Uint8Array,
+  argument: number,
+  index: number,
+): [CBORTag, number] {
+  const [tag, tagBytes] = decodeLength(data, argument, index);
+  if (index >= data.length) {
+    throw new Error("CBOR stream ended before tag value");
+  }
+  const [value, valueBytes] = decodeNext(data, index + tagBytes);
+  return [new CBORTag(tag, value), tagBytes + valueBytes];
+}
+
 function decodeNext(data: Uint8Array, index: number): [CBORType, number] {
   const byte = data[index];
   const majorType = byte >> 5;
@@ -197,7 +227,7 @@ function decodeNext(data: Uint8Array, index: number): [CBORType, number] {
       return decodeMap(data, argument, index);
     }
     case MAJOR_TYPE_TAG: {
-      throw new Error("Unsupported");
+      return decodeTag(data, argument, index);
     }
     case MAJOR_TYPE_SIMPLE_OR_FLOAT: {
       switch (argument) {
@@ -334,6 +364,13 @@ function encodeMap(
   return output;
 }
 
+function encodeTag(tag: CBORTag): (number | Uint8Array)[] {
+  return [
+    new Uint8Array(encodeLength(MAJOR_TYPE_TAG, tag.tag)),
+    ...encodePartialCBOR(tag.value),
+  ];
+}
+
 function encodePartialCBOR(data: CBORType): (number | Uint8Array)[] {
   if (typeof data == "boolean" || data === null || data == undefined) {
     return [encodeSimple(data)];
@@ -352,6 +389,9 @@ function encodePartialCBOR(data: CBORType): (number | Uint8Array)[] {
   }
   if (data instanceof Map) {
     return encodeMap(data);
+  }
+  if (data instanceof CBORTag) {
+    return encodeTag(data);
   }
   throw new Error("Not implemented");
 }
