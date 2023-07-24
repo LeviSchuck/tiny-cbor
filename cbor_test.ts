@@ -561,9 +561,36 @@ Deno.test({
   },
 });
 Deno.test({
+  name: "Decodes limited 16 bit floating point numbers",
+  fn() {
+    assertEquals(decodeCBOR(decodeHex("f97c00")), Infinity);
+    assertEquals(decodeCBOR(decodeHex("f97e00")), NaN);
+    assertEquals(decodeCBOR(decodeHex("f9fc00")), -Infinity);
+  },
+});
+Deno.test({
+  name: "Rejects incomplete 16 bit floating point numbers",
+  fn() {
+    assertThrows(() => {
+      decodeCBOR(decodeHex("f97c"));
+    });
+  },
+});
+Deno.test({
+  name: "Unsupported 16 bit floating point numbers",
+  fn() {
+    assertThrows(() => {
+      decodeCBOR(decodeHex("f9c400")); // Should be -4.0
+    });
+  },
+});
+Deno.test({
   name: "Decodes 32 bit floating point number",
   fn() {
     assertEquals(decodeCBOR(decodeHex("fa47c35000")), 100000.0);
+    assertEquals(decodeCBOR(decodeHex("fa7f800000")), Infinity);
+    assertEquals(decodeCBOR(decodeHex("fa7fc00000")), NaN);
+    assertEquals(decodeCBOR(decodeHex("faff800000")), -Infinity);
   },
 });
 Deno.test({
@@ -573,14 +600,33 @@ Deno.test({
   },
 });
 Deno.test({
+  name: "Rejects incomplete 32 bit floating point number",
+  fn() {
+    assertThrows(() => {
+      decodeCBOR(decodeHex("fa7f7fff"));
+    });
+  },
+});
+Deno.test({
   name: "Decodes 64 bit floating point number",
   fn() {
     assertEquals(decodeCBOR(decodeHex("fb7e37e43c8800759c")), 1.0e+300);
+    assertEquals(decodeCBOR(decodeHex("fb7ff0000000000000")), Infinity);
+    assertEquals(decodeCBOR(decodeHex("fb7ff8000000000000")), NaN);
+    assertEquals(decodeCBOR(decodeHex("fbfff0000000000000")), -Infinity);
   },
 });
 Deno.test({
   name: "Encode 64 bit floating point number",
   fn() {
     assertEquals(encodeCBOR(-4.1), decodeHex("fbc010666666666666"));
+  },
+});
+Deno.test({
+  name: "Rejects incomplete 64 bit floating point number",
+  fn() {
+    assertThrows(() => {
+      decodeCBOR(decodeHex("fb7e37e43c880075"));
+    });
   },
 });

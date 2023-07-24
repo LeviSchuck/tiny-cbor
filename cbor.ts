@@ -6,6 +6,7 @@ import {
   MAJOR_TYPE_MAP,
   MAJOR_TYPE_NEGATIVE_INTEGER,
   MAJOR_TYPE_SIMPLE_OR_FLOAT,
+  MAJOR_TYPE_TAG,
   MAJOR_TYPE_TEXT_STRING,
   MAJOR_TYPE_UNSIGNED_INTEGER,
 } from "./cbor_internal.ts";
@@ -132,7 +133,28 @@ function decodeMap(
   return [result, consumedLength];
 }
 
+function decodeFloat16(data: Uint8Array, index: number): [number, number] {
+  if (index + 3 > data.length) {
+    throw new Error("CBOR stream ended before end of Float 16");
+  }
+  const view = new DataView(data.buffer, index);
+  // Skip the first byte
+  const result = view.getUint16(1, false);
+  // A minimal selection of supported values
+  if (result == 0x7c00) {
+    return [Infinity, 3];
+  } else if (result == 0x7e00) {
+    return [NaN, 3];
+  } else if (result == 0xfc00) {
+    return [-Infinity, 3];
+  }
+  throw new Error("Float16 data is unsupported");
+}
+
 function decodeFloat32(data: Uint8Array, index: number): [number, number] {
+  if (index + 5 > data.length) {
+    throw new Error("CBOR stream ended before end of Float 32");
+  }
   const view = new DataView(data.buffer, index);
   // Skip the first byte
   const result = view.getFloat32(1, false);
@@ -141,6 +163,9 @@ function decodeFloat32(data: Uint8Array, index: number): [number, number] {
 }
 
 function decodeFloat64(data: Uint8Array, index: number): [number, number] {
+  if (index + 9 > data.length) {
+    throw new Error("CBOR stream ended before end of Float 64");
+  }
   const view = new DataView(data.buffer, index);
   // Skip the first byte
   const result = view.getFloat64(1, false);
@@ -171,6 +196,9 @@ function decodeNext(data: Uint8Array, index: number): [CBORType, number] {
     case MAJOR_TYPE_MAP: {
       return decodeMap(data, argument, index);
     }
+    case MAJOR_TYPE_TAG: {
+      throw new Error("Unsupported");
+    }
     case MAJOR_TYPE_SIMPLE_OR_FLOAT: {
       switch (argument) {
         case 20:
@@ -182,7 +210,8 @@ function decodeNext(data: Uint8Array, index: number): [CBORType, number] {
         case 23:
           return [undefined, 1];
         // 24: Simple value (value 32..255 in following byte)
-        // 25: IEEE 754 Half-Precision Float (16 bits follow)
+        case 25: // IEEE 754 Half-Precision Float (16 bits follow)
+          return decodeFloat16(data, index);
         case 26: // IEEE 754 Single-Precision Float (32 bits follow)
           return decodeFloat32(data, index);
         case 27: // IEEE 754 Double-Precision Float (64 bits follow)
@@ -229,7 +258,9 @@ function encodeSimple(data: boolean | null | undefined): number {
 }
 
 function encodeFloat(data: number): Uint8Array {
-  if (Math.fround(data) == data) {
+  if (
+    Math.fround(data) == data || !Number.isFinite(data) || Number.isNaN(data)
+  ) {
     // Float32
     const output = new Uint8Array(5);
     output[0] = 0xfa;
