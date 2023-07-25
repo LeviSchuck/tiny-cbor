@@ -10,22 +10,32 @@ import {
 } from "./cbor_internal.ts";
 import { decodeHex } from "./test_util.ts";
 
+function toView(data: Uint8Array): DataView {
+  return new DataView(data.buffer);
+}
+
 Deno.test({
   name: "Decodes lengths properly",
   fn() {
-    assertEquals(decodeLength(new Uint8Array([0x00]), 0, 0), [0, 1]);
-    assertEquals(decodeLength(new Uint8Array([0x0a]), 10, 0), [10, 1]);
-    assertEquals(decodeLength(new Uint8Array([0x18, 0x18]), 24, 0), [24, 2]);
-    assertEquals(decodeLength(new Uint8Array([0x18, 0x19]), 24, 0), [25, 2]);
-    assertEquals(decodeLength(new Uint8Array([0x19, 0x10, 0]), 25, 0), [
+    assertEquals(decodeLength(toView(new Uint8Array([0x00])), 0, 0), [0, 1]);
+    assertEquals(decodeLength(toView(new Uint8Array([0x0a])), 10, 0), [10, 1]);
+    assertEquals(decodeLength(toView(new Uint8Array([0x18, 0x18])), 24, 0), [
+      24,
+      2,
+    ]);
+    assertEquals(decodeLength(toView(new Uint8Array([0x18, 0x19])), 24, 0), [
+      25,
+      2,
+    ]);
+    assertEquals(decodeLength(toView(new Uint8Array([0x19, 0x10, 0])), 25, 0), [
       4096,
       3,
     ]);
-    assertEquals(decodeLength(decodeHex("1a000f4240"), 26, 0), [
+    assertEquals(decodeLength(toView(decodeHex("1a000f4240")), 26, 0), [
       1000000,
       5,
     ]);
-    assertEquals(decodeLength(decodeHex("1b000000e8d4a51000"), 27, 0), [
+    assertEquals(decodeLength(toView(decodeHex("1b000000e8d4a51000")), 27, 0), [
       1000000000000,
       9,
     ]);
@@ -158,31 +168,31 @@ Deno.test({
   name: "Rejects lengths that do not decode",
   fn() {
     assertThrows(() => {
-      decodeLength(new Uint8Array([0x18]), 24, 0);
+      decodeLength(toView(new Uint8Array([0x18])), 24, 0);
     }, "Requires one more byte");
     assertThrows(() => {
-      decodeLength(new Uint8Array([0x18, 0]), 24, 0);
+      decodeLength(toView(new Uint8Array([0x18, 0])), 24, 0);
     }, "Requires one more byte, number must be > 23");
     assertThrows(() => {
-      decodeLength(new Uint8Array([0x19]), 25, 0);
+      decodeLength(toView(new Uint8Array([0x19])), 25, 0);
     }, "Requires two more bytes, two missing");
     assertThrows(() => {
-      decodeLength(new Uint8Array([0x19, 0]), 25, 0);
+      decodeLength(toView(new Uint8Array([0x19, 0])), 25, 0);
     }, "Requires two more bytes, one missing");
     assertThrows(() => {
-      decodeLength(new Uint8Array([0x19, 0, 0]), 25, 0);
+      decodeLength(toView(new Uint8Array([0x19, 0, 0])), 25, 0);
     }, "Requires two more bytes, number must be > 23");
     assertThrows(() => {
-      decodeLength(decodeHex("1a000f42"), 26, 0);
+      decodeLength(toView(decodeHex("1a000f42")), 26, 0);
     }, "Requires four more bytes, missing a byte");
     assertThrows(() => {
-      decodeLength(decodeHex("1a00000017"), 26, 0);
+      decodeLength(toView(decodeHex("1a00000017")), 26, 0);
     }, "Requires four more bytes, must be > 23");
     assertThrows(() => {
-      decodeLength(decodeHex("1b000000e8d4a510"), 27, 0);
+      decodeLength(toView(decodeHex("1b000000e8d4a510")), 27, 0);
     }, "Requires eight more bytes, missing a byte");
     assertThrows(() => {
-      decodeLength(decodeHex("1b0000000000000017"), 27, 0);
+      decodeLength(toView(decodeHex("1b0000000000000017")), 27, 0);
     }, "Requires eight more bytes, must be > 23");
   },
 });

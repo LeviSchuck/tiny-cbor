@@ -11,37 +11,60 @@ import {
   MAJOR_TYPE_UNSIGNED_INTEGER,
 } from "./cbor_internal.ts";
 
+/**
+ * A value which is wrapped with a CBOR Tag.
+ * Several tags are registered with defined meanings like 0 for a date string.
+ * These meanings are **not interpreted** when decoded or encoded.
+ *
+ * This class is an immutable record.
+ * If the tag number or value needs to change, then construct a new tag
+ */
 export class CBORTag {
   private tagId: number;
   private tagValue: CBORType;
+  /**
+   * Wrap a value with a tag number.
+   * When encoded, this tag will be attached to the value.
+   *
+   * @param tag Tag number
+   * @param value Wrapped value
+   */
   constructor(tag: number, value: CBORType) {
     this.tagId = tag;
     this.tagValue = value;
   }
+  /**
+   * Read the tag number
+   */
   get tag(): number {
     return this.tagId;
   }
+  /**
+   * Read the value
+   */
   get value(): CBORType {
     return this.tagValue;
   }
 }
 
-export type SimpleCBORType =
+/**
+ * Supported types which are encodable and decodable with tiny CBOR.
+ * Note that plain javascript objects are omitted.
+ */
+export type CBORType =
   | number
   | bigint
   | string
   | Uint8Array
   | boolean
   | null
-  | undefined;
-export type CBORType =
-  | SimpleCBORType
+  | undefined
   | CBORType[]
   | CBORTag
   | Map<string | number, CBORType>;
 
 function decodeUnsignedInteger(
-  data: Uint8Array,
+  data: DataView,
   argument: number,
   index: number,
 ): [number, number] {
@@ -49,7 +72,7 @@ function decodeUnsignedInteger(
 }
 
 function decodeNegativeInteger(
-  data: Uint8Array,
+  data: DataView,
   argument: number,
   index: number,
 ): [number, number] {
@@ -58,21 +81,23 @@ function decodeNegativeInteger(
 }
 
 function decodeByteString(
-  data: Uint8Array,
+  data: DataView,
   argument: number,
   index: number,
 ): [Uint8Array, number] {
   const [lengthValue, lengthConsumed] = decodeLength(data, argument, index);
   const dataStartIndex = index + lengthConsumed;
   return [
-    data.slice(dataStartIndex, dataStartIndex + lengthValue),
+    new Uint8Array(
+      data.buffer.slice(dataStartIndex, dataStartIndex + lengthValue),
+    ),
     lengthConsumed + lengthValue,
   ];
 }
 
 const TEXT_DECODER = new TextDecoder();
 function decodeString(
-  data: Uint8Array,
+  data: DataView,
   argument: number,
   index: number,
 ): [string, number] {
@@ -81,7 +106,7 @@ function decodeString(
 }
 
 function decodeArray(
-  data: Uint8Array,
+  data: DataView,
   argument: number,
   index: number,
 ): [CBORType[], number] {
@@ -92,7 +117,7 @@ function decodeArray(
   let consumedLength = lengthConsumed;
   const value = [];
   for (let i = 0; i < length; i++) {
-    const remainingDataLength = data.length - index - consumedLength;
+    const remainingDataLength = data.byteLength - index - consumedLength;
     if (remainingDataLength <= 0) {
       throw new Error("array is not supported or well formed");
     }
@@ -106,7 +131,7 @@ function decodeArray(
 const MAP_ERROR = "Map is not supported or well formed";
 
 function decodeMap(
-  data: Uint8Array,
+  data: DataView,
   argument: number,
   index: number,
 ): [CBORType, number] {
@@ -117,7 +142,7 @@ function decodeMap(
   let consumedLength = lengthConsumed;
   const result = new Map<string | number, CBORType>();
   for (let i = 0; i < length; i++) {
-    let remainingDataLength = data.length - index - consumedLength;
+    let remainingDataLength = data.byteLength - index - consumedLength;
     if (remainingDataLength <= 0) {
       throw new Error(MAP_ERROR);
     }
@@ -150,13 +175,12 @@ function decodeMap(
   return [result, consumedLength];
 }
 
-function decodeFloat16(data: Uint8Array, index: number): [number, number] {
-  if (index + 3 > data.length) {
+function decodeFloat16(data: DataView, index: number): [number, number] {
+  if (index + 3 > data.byteLength) {
     throw new Error("CBOR stream ended before end of Float 16");
   }
-  const view = new DataView(data.buffer, index);
   // Skip the first byte
-  const result = view.getUint16(1, false);
+  const result = data.getUint16(index + 1, false);
   // A minimal selection of supported values
   if (result == 0x7c00) {
     return [Infinity, 3];
@@ -168,43 +192,41 @@ function decodeFloat16(data: Uint8Array, index: number): [number, number] {
   throw new Error("Float16 data is unsupported");
 }
 
-function decodeFloat32(data: Uint8Array, index: number): [number, number] {
-  if (index + 5 > data.length) {
+function decodeFloat32(data: DataView, index: number): [number, number] {
+  if (index + 5 > data.byteLength) {
     throw new Error("CBOR stream ended before end of Float 32");
   }
-  const view = new DataView(data.buffer, index);
   // Skip the first byte
-  const result = view.getFloat32(1, false);
+  const result = data.getFloat32(index + 1, false);
   // First byte + 4 byte float
   return [result, 5];
 }
 
-function decodeFloat64(data: Uint8Array, index: number): [number, number] {
-  if (index + 9 > data.length) {
+function decodeFloat64(data: DataView, index: number): [number, number] {
+  if (index + 9 > data.byteLength) {
     throw new Error("CBOR stream ended before end of Float 64");
   }
-  const view = new DataView(data.buffer, index);
   // Skip the first byte
-  const result = view.getFloat64(1, false);
+  const result = data.getFloat64(index + 1, false);
   // First byte + 8 byte float
   return [result, 9];
 }
 
 function decodeTag(
-  data: Uint8Array,
+  data: DataView,
   argument: number,
   index: number,
 ): [CBORTag, number] {
   const [tag, tagBytes] = decodeLength(data, argument, index);
-  if (index >= data.length) {
-    throw new Error("CBOR stream ended before tag value");
-  }
   const [value, valueBytes] = decodeNext(data, index + tagBytes);
   return [new CBORTag(tag, value), tagBytes + valueBytes];
 }
 
-function decodeNext(data: Uint8Array, index: number): [CBORType, number] {
-  const byte = data[index];
+function decodeNext(data: DataView, index: number): [CBORType, number] {
+  if (index >= data.byteLength) {
+    throw new Error("CBOR stream ended before tag value");
+  }
+  const byte = data.getUint8(index);
   const majorType = byte >> 5;
   const argument = byte & 0x1f;
   switch (majorType) {
@@ -252,26 +274,6 @@ function decodeNext(data: Uint8Array, index: number): [CBORType, number] {
     }
   }
   throw new Error(`Unsupported or not well formed at ${index}`);
-}
-
-export function decodePartialCBOR(
-  data: Uint8Array,
-  index: number,
-): [CBORType, number] {
-  if (data.length === 0 || data.length <= index || index < 0) {
-    throw new Error("No data");
-  }
-  return decodeNext(data, index);
-}
-
-export function decodeCBOR(data: Uint8Array): CBORType {
-  const [value, length] = decodePartialCBOR(data, 0);
-  if (length !== data.length) {
-    throw new Error(
-      `Data was decoded, but the whole stream was not processed ${length} != ${data.length}`,
-    );
-  }
-  return value;
 }
 
 function encodeSimple(data: boolean | null | undefined): number {
@@ -396,6 +398,101 @@ function encodePartialCBOR(data: CBORType): (number | Uint8Array)[] {
   throw new Error("Not implemented");
 }
 
+/**
+ * Like {decodeCBOR}, but the length of the data is unknown and there is likely
+ * more -- possibly unrelated non-CBOR -- data afterwards.
+ *
+ * Examples:
+ *
+ * ```ts
+ * import {decodePartialCBOR} from './cbor.ts'
+ * decodePartialCBOR(new Uint8Array([1, 2, 245, 3, 4]), 2)
+ * // returns [true, 1]
+ * // It did not decode the leading [1, 2] or trailing [3, 4]
+ * ```
+ *
+ * @param data a data stream to read data from
+ * @param index where to start reading in the data stream
+ * @returns a tuple of the value followed by bytes read.
+ * @throws {Error}
+ *   When the data stream ends early or the CBOR data is not well formed
+ */
+export function decodePartialCBOR(
+  data: DataView | Uint8Array | ArrayBuffer,
+  index: number,
+): [CBORType, number] {
+  if (data.byteLength === 0 || data.byteLength <= index || index < 0) {
+    throw new Error("No data");
+  }
+
+  if (data instanceof Uint8Array) {
+    return decodeNext(new DataView(data.buffer), index);
+  } else if (data instanceof ArrayBuffer) {
+    return decodeNext(new DataView(data), index);
+  }
+
+  // otherwise, it is a data view
+  return decodeNext(data, index);
+}
+
+/**
+ * Decode CBOR data from a binary stream
+ *
+ * The entire data stream from [0, length) will be consumed.
+ * If you require a partial decoding, see {decodePartialCBOR}.
+ *
+ * Examples:
+ *
+ * ```ts
+ * import {decodeCBOR, CBORTag, CBORType} from './cbor.ts'
+ * decodeCBOR(new Uint8Array([162, 99, 107, 101, 121, 101, 118, 97, 108, 117, 101, 1, 109, 97, 110, 111, 116, 104, 101, 114, 32, 118, 97, 108, 117, 101]));
+ * // returns new Map<string | number, CBORType>([
+ * //   ["key", "value"],
+ * //   [1, "another value"]
+ * // ]);
+ *
+ * const taggedItem = new Uint8Array([217, 4, 210, 101, 104, 101, 108, 108, 111]);
+ * decodeCBOR(new DataView(taggedItem.buffer))
+ * // returns new CBORTag(1234, "hello")
+ * ```
+ *
+ * @param data a data stream, multiple types are supported
+ * @returns
+ */
+export function decodeCBOR(
+  data: DataView | Uint8Array | ArrayBuffer,
+): CBORType {
+  const [value, length] = decodePartialCBOR(data, 0);
+  if (length !== data.byteLength) {
+    throw new Error(
+      `Data was decoded, but the whole stream was not processed ${length} != ${data.byteLength}`,
+    );
+  }
+  return value;
+}
+
+/**
+ * Encode a supported structure to a CBOR byte string.
+ *
+ * Example:
+ *
+ * ```ts
+ * import {encodeCBOR, CBORType, CBORTag} from './cbor.ts'
+ * encodeCBOR(new Map<string | number, CBORType>([
+ *   ["key", "value"],
+ *   [1, "another value"]
+ * ]));
+ * // returns new Uint8Array([162, 99, 107, 101, 121, 101, 118, 97, 108, 117, 101, 1, 109, 97, 110, 111, 116, 104, 101, 114, 32 118, 97, 108, 117, 101])
+ *
+ * encodeCBOR(new CBORTag(1234, "hello"))
+ * // returns new UInt8Array([217, 4, 210, 101, 104, 101, 108, 108, 111])
+ * ```
+ *
+ * @param data Data to encode
+ * @returns A byte string as a Uint8Array
+ * @throws Error
+ *   if unsupported data is found during encoding
+ */
 export function encodeCBOR(data: CBORType): Uint8Array {
   const results = encodePartialCBOR(data);
   let length = 0;
