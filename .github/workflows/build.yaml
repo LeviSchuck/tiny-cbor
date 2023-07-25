@@ -12,7 +12,7 @@ jobs:
           deno-version: v1.x
       - run: deno fmt --check
       - run: deno lint
-      - run: deno test
+      - run: deno test --doc
       # When tagged, prepare it for publishing
       - name: Get tag version
         if: startsWith(github.ref, 'refs/tags/')

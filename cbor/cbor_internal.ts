@@ -1,12 +1,12 @@
 export function decodeLength(
-  data: Uint8Array,
+  data: DataView,
   argument: number,
   index: number,
 ): [number, number] {
   if (argument < 24) {
     return [argument, 1];
   }
-  const remainingDataLength = data.length - index - 1;
+  const remainingDataLength = data.byteLength - index - 1;
   const view = new DataView(data.buffer, index + 1);
   let output: number | undefined;
   let bytes = 0;
