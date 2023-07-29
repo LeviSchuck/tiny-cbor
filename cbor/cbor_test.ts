@@ -19,7 +19,8 @@ import {
   WEBAUTHN_REGISTRATION_PAYLOAD,
   YUBIKEY_WEBAUTHN_PAYLOAD,
 } from "./test_data.ts";
-import { decodeHex } from "./test_util.ts";
+import {decodeHex} from "https://deno.land/x/tiny_encodings@0.1.0/encoding.ts";
+
 
 Deno.test({
   name: "Rejects empty input",

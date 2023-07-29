@@ -331,69 +331,67 @@ function encodeNumber(data: number | bigint): (number | Uint8Array)[] {
 
 const ENCODER = new TextEncoder();
 
-function encodeString(data: string): (number | Uint8Array)[] {
-  return [
-    new Uint8Array(encodeLength(MAJOR_TYPE_TEXT_STRING, data.length)),
-    ENCODER.encode(data),
-  ];
+function encodeString(data: string, output: (number | Uint8Array)[]) {
+  output.push(...encodeLength(MAJOR_TYPE_TEXT_STRING, data.length))
+  output.push(ENCODER.encode(data))
 }
 
-function encodeBytes(data: Uint8Array): (number | Uint8Array)[] {
-  return [
-    new Uint8Array(encodeLength(MAJOR_TYPE_BYTE_STRING, data.length)),
-    data,
-  ];
+function encodeBytes(data: Uint8Array, output: (number | Uint8Array)[]) {
+  output.push(...encodeLength(MAJOR_TYPE_BYTE_STRING, data.length));
+  output.push(data);
 }
 
-function encodeArray(data: CBORType[]): (number | Uint8Array)[] {
-  const output: (number | Uint8Array)[] = [];
-  output.push(new Uint8Array(encodeLength(MAJOR_TYPE_ARRAY, data.length)));
+function encodeArray(data: CBORType[], output: (number | Uint8Array)[]) {
+  output.push(...encodeLength(MAJOR_TYPE_ARRAY, data.length));
   for (const element of data) {
-    output.push(...encodePartialCBOR(element));
+    encodePartialCBOR(element, output);
   }
-  return output;
 }
 
 function encodeMap(
   data: Map<string | number, CBORType>,
-): (number | Uint8Array)[] {
-  const output: (number | Uint8Array)[] = [];
+  output: (number | Uint8Array)[]
+){
   output.push(new Uint8Array(encodeLength(MAJOR_TYPE_MAP, data.size)));
   for (const [key, value] of data.entries()) {
-    output.push(...encodePartialCBOR(key));
-    output.push(...encodePartialCBOR(value));
+    encodePartialCBOR(key, output);
+    encodePartialCBOR(value, output);
   }
-  return output;
 }
 
-function encodeTag(tag: CBORTag): (number | Uint8Array)[] {
-  return [
-    new Uint8Array(encodeLength(MAJOR_TYPE_TAG, tag.tag)),
-    ...encodePartialCBOR(tag.value),
-  ];
+function encodeTag(tag: CBORTag, output: (number | Uint8Array)[]) {
+  output.push(...encodeLength(MAJOR_TYPE_TAG, tag.tag));
+  encodePartialCBOR(tag.value, output);
 }
 
-function encodePartialCBOR(data: CBORType): (number | Uint8Array)[] {
+function encodePartialCBOR(data: CBORType, output: (number | Uint8Array)[]) {
   if (typeof data == "boolean" || data === null || data == undefined) {
-    return [encodeSimple(data)];
+    output.push(encodeSimple(data));
+    return;
   }
   if (typeof data == "number" || typeof data == "bigint") {
-    return encodeNumber(data);
+    output.push(...encodeNumber(data));
+    return;
   }
   if (typeof data == "string") {
-    return encodeString(data);
+    encodeString(data, output);
+    return;
   }
   if (data instanceof Uint8Array) {
-    return encodeBytes(data);
+    encodeBytes(data, output);
+    return;
   }
   if (Array.isArray(data)) {
-    return encodeArray(data);
+    encodeArray(data, output);
+    return;
   }
   if (data instanceof Map) {
-    return encodeMap(data);
+    encodeMap(data, output);
+    return;
   }
   if (data instanceof CBORTag) {
-    return encodeTag(data);
+    encodeTag(data, output);
+    return;
   }
   throw new Error("Not implemented");
 }
@@ -494,7 +492,8 @@ export function decodeCBOR(
  *   if unsupported data is found during encoding
  */
 export function encodeCBOR(data: CBORType): Uint8Array {
-  const results = encodePartialCBOR(data);
+  const results : (number | Uint8Array)[] = [];
+  encodePartialCBOR(data, results);
   let length = 0;
   for (const result of results) {
     if (typeof result == "number") {
