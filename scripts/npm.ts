@@ -4,7 +4,7 @@ import { build, emptyDir } from "https://deno.land/x/dnt@0.37.0/mod.ts";
 await emptyDir("./npm");
 
 await build({
-  entryPoints: ["./cbor.ts"],
+  entryPoints: ["./cbor/cbor.ts"],
   outDir: "./npm",
   shims: {
     deno: true,
