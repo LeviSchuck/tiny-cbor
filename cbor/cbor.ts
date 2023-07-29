@@ -332,8 +332,8 @@ function encodeNumber(data: number | bigint): (number | Uint8Array)[] {
 const ENCODER = new TextEncoder();
 
 function encodeString(data: string, output: (number | Uint8Array)[]) {
-  output.push(...encodeLength(MAJOR_TYPE_TEXT_STRING, data.length))
-  output.push(ENCODER.encode(data))
+  output.push(...encodeLength(MAJOR_TYPE_TEXT_STRING, data.length));
+  output.push(ENCODER.encode(data));
 }
 
 function encodeBytes(data: Uint8Array, output: (number | Uint8Array)[]) {
@@ -350,8 +350,8 @@ function encodeArray(data: CBORType[], output: (number | Uint8Array)[]) {
 
 function encodeMap(
   data: Map<string | number, CBORType>,
-  output: (number | Uint8Array)[]
-){
+  output: (number | Uint8Array)[],
+) {
   output.push(new Uint8Array(encodeLength(MAJOR_TYPE_MAP, data.size)));
   for (const [key, value] of data.entries()) {
     encodePartialCBOR(key, output);
@@ -492,7 +492,7 @@ export function decodeCBOR(
  *   if unsupported data is found during encoding
  */
 export function encodeCBOR(data: CBORType): Uint8Array {
-  const results : (number | Uint8Array)[] = [];
+  const results: (number | Uint8Array)[] = [];
   encodePartialCBOR(data, results);
   let length = 0;
   for (const result of results) {

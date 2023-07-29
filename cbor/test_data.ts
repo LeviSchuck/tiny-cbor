@@ -1,5 +1,8 @@
 // deno-lint-ignore-file no-explicit-any
-import { decodeBase64, decodeHex } from "https://deno.land/x/tiny_encodings@0.1.0/encoding.ts";
+import {
+  decodeBase64,
+  decodeHex,
+} from "https://deno.land/x/tiny_encodings@0.1.0/encoding.ts";
 
 export const APPLE_MACBOOK_WEBAUTHN_PAYLOAD = decodeBase64(
   "o2NmbXRmcGFja2VkZ2F0dFN0bXSiY2FsZyZjc2lnWEcwRQIhALaKZcLGbJC2pBgXo1TOQ3kk6QJBK6f06RoVRPXWoKZ1AiAem3G7nAvOdHmRkRB6XLSqqW6ewlSnEQEh41nihBaexWhhdXRoRGF0YVik5Xzy8T0lOI+lGCNxUj1Gkv4afX8pd2CguvM0wW24Z31FAAAAAK3OAAI1vMYKZIsLJfHwVQMAIIbxWxpjQbTc5Egz0nCF0CMGAKZR63CA2Q104dGfXhRUpQECAyYgASFYIJuZHdGDZCQWWhbCL/unV9t0EySQlGn91bWqM72cOfn+Ilgg58aIWjt6fa1ysYdJoKrEw17+tjNPJEtTmvlC7Ee0vt0=",

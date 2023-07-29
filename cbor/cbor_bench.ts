@@ -1,5 +1,8 @@
 import { decodeCBOR, encodeCBOR } from "./cbor.ts";
-import { APPLE_MACBOOK_WEBAUTHN_PAYLOAD, DECODED_APPLE_MACBOOK_WEBAUTHN_PAYLOAD } from "./test_data.ts";
+import {
+  APPLE_MACBOOK_WEBAUTHN_PAYLOAD,
+  DECODED_APPLE_MACBOOK_WEBAUTHN_PAYLOAD,
+} from "./test_data.ts";
 
 Deno.bench({
   name: "Decoding a WebAuthn assertion",
