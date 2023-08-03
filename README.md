@@ -1,8 +1,10 @@
 # Tiny CBOR
 
-[![](https://img.shields.io/github/actions/workflow/status/levischuck/tiny-cbor/build.yaml?branch=main)](https://github.com/LeviSchuck/tiny-cbor/actions) [![](https://img.shields.io/codecov/c/gh/levischuck/tiny-cbor?style=flat-square)](https://codecov.io/gh/levischuck/tiny-cbor) [![](https://img.shields.io/npm/dt/%40levischuck/tiny-cbor)](https://www.npmjs.com/package/@levischuck/tiny-cbor) [![](https://img.shields.io/github/license/levischuck/tiny-cbor)](https://github.com/LeviSchuck/tiny-cbor/blob/main/LICENSE.txt) ![](https://img.shields.io/bundlephobia/min/%40levischuck/tiny-cbor)
-
-
+[![](https://img.shields.io/github/actions/workflow/status/levischuck/tiny-cbor/build.yaml?branch=main)](https://github.com/LeviSchuck/tiny-cbor/actions)
+[![](https://img.shields.io/codecov/c/gh/levischuck/tiny-cbor?style=flat-square)](https://codecov.io/gh/levischuck/tiny-cbor)
+[![](https://img.shields.io/npm/dt/%40levischuck/tiny-cbor)](https://www.npmjs.com/package/@levischuck/tiny-cbor)
+[![](https://img.shields.io/github/license/levischuck/tiny-cbor)](https://github.com/LeviSchuck/tiny-cbor/blob/main/LICENSE.txt)
+![](https://img.shields.io/bundlephobia/min/%40levischuck/tiny-cbor)
 
 This minimal generic library decodes and encodes most useful CBOR structures
 into simple JavaScript structures:
