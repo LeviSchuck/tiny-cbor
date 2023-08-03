@@ -705,7 +705,7 @@ Deno.test({
   name: "Rejects unsupported type",
   fn() {
     assertThrows(() => {
-      encodeCBOR({"hello": true} as any);
+      encodeCBOR({ "hello": true } as any);
     });
-  }
-})
+  },
+});
