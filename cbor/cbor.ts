@@ -283,10 +283,9 @@ function encodeSimple(data: boolean | null | undefined): number {
     return 0xf4;
   } else if (data === null) {
     return 0xf6;
-  } else if (data === undefined) {
-    return 0xf7;
   }
-  throw new Error("Internal error");
+  // Else undefined
+  return 0xf7;
 }
 
 function encodeFloat(data: number): Uint8Array {

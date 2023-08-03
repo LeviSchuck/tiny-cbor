@@ -1,3 +1,4 @@
+//deno-lint-ignore-file no-explicit-any
 import {
   assertEquals,
   assertThrows,
@@ -479,6 +480,39 @@ Deno.test({
     );
   },
 });
+
+Deno.test({
+  name: "Can decode array buffers",
+  fn() {
+    // Apple MacBook
+    assertEquals(
+      decodeCBOR(APPLE_MACBOOK_WEBAUTHN_PAYLOAD.buffer),
+      DECODED_APPLE_MACBOOK_WEBAUTHN_PAYLOAD,
+    );
+    // Yubikey 5
+    assertEquals(
+      decodeCBOR(YUBIKEY_WEBAUTHN_PAYLOAD.buffer),
+      DECODED_YUBIKEY_WEBAUTHN_PAYLOAD,
+    );
+  },
+});
+Deno.test({
+  name: "Can decode data views",
+  fn() {
+    // Apple MacBook
+    const appleView = new DataView(APPLE_MACBOOK_WEBAUTHN_PAYLOAD.buffer);
+    const yubikeyView = new DataView(YUBIKEY_WEBAUTHN_PAYLOAD.buffer);
+    assertEquals(
+      decodeCBOR(appleView),
+      DECODED_APPLE_MACBOOK_WEBAUTHN_PAYLOAD,
+    );
+    // Yubikey 5
+    assertEquals(
+      decodeCBOR(yubikeyView),
+      DECODED_YUBIKEY_WEBAUTHN_PAYLOAD,
+    );
+  },
+});
 Deno.test({
   name: "Can encode webauthn registration",
   fn() {
@@ -667,3 +701,11 @@ Deno.test({
     );
   },
 });
+Deno.test({
+  name: "Rejects unsupported type",
+  fn() {
+    assertThrows(() => {
+      encodeCBOR({"hello": true} as any);
+    });
+  }
+})
