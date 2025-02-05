@@ -32,8 +32,9 @@ jobs:
         if: ${{ steps.release.outputs.prs_created && steps.release.outputs.pr }}
         shell: bash
         env:
-          BRANCH: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+          JSON: ${{ steps.release.outputs.pr }}
         run: |
+          BRANCH=$(echo $JSON | jq -r '.headBranchName')
           echo "Branch name ${BRANCH}"
           git fetch origin "${BRANCH}"
           git checkout "${BRANCH}"
