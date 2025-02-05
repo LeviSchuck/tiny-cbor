@@ -8,5 +8,9 @@
   },
   "fmt": {
     "exclude": ["npm"]
-  }
+  },
+  "name": "@levischuck/tiny-cbor",
+  "version": "0.2.2",
+  "license": "MIT",
+  "exports": "./index.ts"
 }

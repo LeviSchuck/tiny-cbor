@@ -4,12 +4,15 @@ on: push
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
-      - uses: actions/checkout@v3
-      - uses: denoland/setup-deno@v1.1.2
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
         with:
-          deno-version: v1.x
+          deno-version: v2.x
       - name: Check formatting
         run: deno fmt --check
       - name: Lint source
@@ -42,3 +45,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: cd npm && npm publish --access public
+      - name: Publish package
+        if: startsWith(github.ref, 'refs/tags/')
+        run: npx jsr publish
