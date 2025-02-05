@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.5](https://github.com/LeviSchuck/tiny-cbor/compare/v0.2.4...v0.2.5) (2025-02-05)
+
+
+### Bug Fixes
+
+* Node 24 doesn't exist yet ([7767091](https://github.com/LeviSchuck/tiny-cbor/commit/7767091d6380b82771a4e14857f075c1e203a345))
+
 ## [0.2.4](https://github.com/LeviSchuck/tiny-cbor/compare/v0.2.3...v0.2.4) (2025-02-05)
 
 
