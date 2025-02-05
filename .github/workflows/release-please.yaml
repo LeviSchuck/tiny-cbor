@@ -27,7 +27,7 @@ jobs:
       - name: Get tag version
         if: ${{ steps.release.outputs.release_created }}
         id: get_tag_version
-        run: echo TAG_VERSION=${GITHUB_REF/refs\/tags\//} >> $GITHUB_OUTPUT
+        run: echo TAG_VERSION=$(cat "version.txt") >> $GITHUB_OUTPUT
       - uses: denoland/setup-deno@v2
         if: ${{ steps.release.outputs.release_created }}
         with:
