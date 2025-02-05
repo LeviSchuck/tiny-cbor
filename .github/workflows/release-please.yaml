@@ -42,10 +42,11 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         run: deno task npm ${{steps.get_tag_version.outputs.TAG_VERSION}}
       - name: Update release PR
-        if: steps.release.outputs.pr
+        if: ${{ steps.release.outputs.prs_created }}
         shell: bash
         run: |
           prBranch=${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+          echo "Branch name ${prBranch}"
           git fetch origin "${prBranch}"
           git checkout "${prBranch}"
           deno task version
