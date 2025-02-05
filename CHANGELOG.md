@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.7](https://github.com/LeviSchuck/tiny-cbor/compare/v0.2.6...v0.2.7) (2025-02-05)
+
+
+### Bug Fixes
+
+* add deno to prs created one ([573f80a](https://github.com/LeviSchuck/tiny-cbor/commit/573f80afe2504535698d7da13600427510e5a021))
+* Checkout! ([4a06b7d](https://github.com/LeviSchuck/tiny-cbor/commit/4a06b7dae7fdb3169e1e430802b35952ccfebb73))
+* CodeCov update ([9ff3f27](https://github.com/LeviSchuck/tiny-cbor/commit/9ff3f279b49e7aabcab164eb5638d374df8cac17))
+* deno version updating ([cc98231](https://github.com/LeviSchuck/tiny-cbor/commit/cc98231f5976ff88a0337563c8701fad08906c9b))
+* Doing the thing ([44beb9c](https://github.com/LeviSchuck/tiny-cbor/commit/44beb9c869a66237d37f85f799292ea73c20dadb))
+* I guess it's just one file ([477ad7e](https://github.com/LeviSchuck/tiny-cbor/commit/477ad7e36a6443e7f4f723d267a693a02ee4b63c))
+* Try again ([1c303f2](https://github.com/LeviSchuck/tiny-cbor/commit/1c303f22e521d5b01c5421168a4ed0a07531c21c))
+* Use version.txt ([1b7ee46](https://github.com/LeviSchuck/tiny-cbor/commit/1b7ee468bd144cdb7bd9bf7bb8fed887d1a7dfa7))
+
 ## [0.2.6](https://github.com/LeviSchuck/tiny-cbor/compare/v0.2.5...v0.2.6) (2025-02-05)
 
 
