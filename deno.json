@@ -18,7 +18,7 @@
     ]
   },
   "name": "@levischuck/tiny-cbor",
-  "version": "0.2.2",
+  "version": "0.2.7",
   "license": "MIT",
   "exports": "./index.ts"
 }
