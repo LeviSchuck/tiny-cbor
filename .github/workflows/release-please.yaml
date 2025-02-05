@@ -41,6 +41,17 @@ jobs:
       - name: npm build
         if: ${{ steps.release.outputs.release_created }}
         run: deno task npm ${{steps.get_tag_version.outputs.TAG_VERSION}}
+      - name: Update release PR
+        if: steps.release.outputs.pr
+        shell: bash
+        run: |
+          prBranch=${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+          git fetch origin "${prBranch}"
+          git checkout "${prBranch}"
+          deno task version
+          git config user.name "Levi Schuck"
+          git config user.email "me@levischuck.com"
+          git add . && git commit -m "chore: Update version in deno" && git push || echo "No update needed"
       - name: npm publish
         if: ${{ steps.release.outputs.release_created }}
         env:
