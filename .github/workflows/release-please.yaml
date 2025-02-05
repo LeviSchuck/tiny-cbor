@@ -27,13 +27,18 @@ jobs:
         id: release
         with:
           token: ${{ secrets.RELEASE_PLEASE_PAT }}
-          release-type: node
+          release-type: simple
 
     # When tagged, prepare it for publishing
       - name: Get tag version
         if: ${{ steps.release.outputs.release_created }}
         id: get_tag_version
-        run: echo TAG_VERSION=${GITHUB_REF/refs\/tags\//} >> $GITHUB_OUTPUT
+        run: |
+          echo TAG_VERSION=${GITHUB_REF/refs\/tags\//} >> $GITHUB_OUTPUT
+          echo ${GITHUB_REF/refs\/tags\//} > version.txt
+      - name: Update version in deno.json
+        if: ${{ steps.release.outputs.release_created }}
+        run: deno task version
       - uses: actions/setup-node@v4
         if: ${{ steps.release.outputs.release_created }}
         with:

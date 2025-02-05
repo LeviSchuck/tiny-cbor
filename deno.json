@@ -1,13 +1,18 @@
 {
   "tasks": {
     "test": "deno test --watch",
-    "npm": "deno run --allow-env --allow-read --allow-write --allow-run --allow-net scripts/npm.ts"
+    "npm": "deno run --allow-env --allow-read --allow-write --allow-run --allow-net scripts/npm.ts",
+    "version": "deno run --allow-read --allow-write scripts/version.ts"
   },
   "lint": {
-    "exclude": ["npm"]
+    "exclude": [
+      "npm"
+    ]
   },
   "fmt": {
-    "exclude": ["npm"]
+    "exclude": [
+      "npm"
+    ]
   },
   "name": "@levischuck/tiny-cbor",
   "version": "0.2.2",
