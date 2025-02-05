@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.6](https://github.com/LeviSchuck/tiny-cbor/compare/v0.2.5...v0.2.6) (2025-02-05)
+
+
+### Bug Fixes
+
+* Reorder steps ([ad34b1c](https://github.com/LeviSchuck/tiny-cbor/commit/ad34b1c211cf32958f16a9fd4bdd2833169839fc))
+
 ## [0.2.5](https://github.com/LeviSchuck/tiny-cbor/compare/v0.2.4...v0.2.5) (2025-02-05)
 
 
