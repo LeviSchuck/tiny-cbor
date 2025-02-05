@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.8](https://github.com/LeviSchuck/tiny-cbor/compare/v0.2.7...v0.2.8) (2025-02-05)
+
+
+### Bug Fixes
+
+* json parsing I guess ([2c7eecc](https://github.com/LeviSchuck/tiny-cbor/commit/2c7eecc481fda75e4f0b677b2305df177bd1bc00))
+
 ## [0.2.7](https://github.com/LeviSchuck/tiny-cbor/compare/v0.2.6...v0.2.7) (2025-02-05)
 
 
