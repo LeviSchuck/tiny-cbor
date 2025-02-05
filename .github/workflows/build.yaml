@@ -35,8 +35,8 @@ jobs:
       - uses: actions/setup-node@v3
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          node-version: '18.x'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: "18.x"
+          registry-url: "https://registry.npmjs.org"
       - name: npm build
         if: startsWith(github.ref, 'refs/tags/')
         run: deno task npm ${{steps.get_tag_version.outputs.TAG_VERSION}}
