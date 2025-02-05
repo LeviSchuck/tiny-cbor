@@ -19,11 +19,10 @@ jobs:
         run: echo "Run attempt $ATTEMPT"
       - uses: actions/checkout@v4
         if: ${{ steps.release.outputs.release_created }}
-       - name: Get tag version
+      - name: Get tag version
         if: ${{ steps.release.outputs.release_created }}
         id: get_tag_version
-        run: |
-          echo TAG_VERSION=${GITHUB_REF/refs\/tags\//} >> $GITHUB_OUTPUT
+        run: echo TAG_VERSION=${GITHUB_REF/refs\/tags\//} >> $GITHUB_OUTPUT
       - uses: googleapis/release-please-action@v4
         id: release
         with:
