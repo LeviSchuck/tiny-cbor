@@ -11,7 +11,10 @@
   },
   "fmt": {
     "exclude": [
-      "npm"
+      "npm",
+      "CHANGELOG.md",
+      ".github",
+      ".vscode"
     ]
   },
   "name": "@levischuck/tiny-cbor",
