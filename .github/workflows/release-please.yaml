@@ -1,0 +1,52 @@
+on:
+  push:
+    branches:
+      - main
+
+name: release-please
+
+jobs:
+  release-please:
+    permissions:
+      id-token: write # Allow connecting to other services like AWS
+      contents: write # Able to create release commit
+      pull-requests: write # Able to create release PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run attempt
+        env:
+          ATTEMPT: ${{ github.run_attempt }}
+        run: echo "Run attempt $ATTEMPT"
+      - uses: actions/checkout@v4
+        if: ${{ steps.release.outputs.release_created }}
+      - uses: denoland/setup-deno@v2
+        if: ${{ steps.release.outputs.release_created }}
+        with:
+          deno-version: v2.x
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          release-type: node
+
+    # When tagged, prepare it for publishing
+      - name: Get tag version
+        if: ${{ steps.release.outputs.release_created }}
+        id: get_tag_version
+        run: echo TAG_VERSION=${GITHUB_REF/refs\/tags\//} >> $GITHUB_OUTPUT
+      - uses: actions/setup-node@v4
+        if: ${{ steps.release.outputs.release_created }}
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: npm build
+        if: ${{ steps.release.outputs.release_created }}
+        run: deno task npm ${{steps.get_tag_version.outputs.TAG_VERSION}}
+      - name: npm publish
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: cd npm && npm publish --access public
+      - name: Publish JSX
+        if: ${{ steps.release.outputs.release_created }}
+        run: npx jsr publish

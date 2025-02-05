@@ -22,29 +22,8 @@ jobs:
       - name: Convert coverage details to a report file
         run: deno coverage ./coverage --lcov > coverage.lcov
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
         with:
           file: ./coverage.lcov
-      # When tagged, prepare it for publishing
-      - name: Get tag version
-        if: startsWith(github.ref, 'refs/tags/')
-        id: get_tag_version
-        run: echo TAG_VERSION=${GITHUB_REF/refs\/tags\//} >> $GITHUB_OUTPUT
-      - uses: actions/setup-node@v3
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          node-version: "18.x"
-          registry-url: "https://registry.npmjs.org"
-      - name: npm build
-        if: startsWith(github.ref, 'refs/tags/')
-        run: deno task npm ${{steps.get_tag_version.outputs.TAG_VERSION}}
-      - name: npm publish
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: cd npm && npm publish --access public
-      - name: Publish package
-        if: startsWith(github.ref, 'refs/tags/')
-        run: npx jsr publish
