@@ -26,4 +26,5 @@ jobs:
         env:
           use_oidc: true
         with:
-          file: ./coverage.lcov
+          files:
+            - ./coverage.lcov
