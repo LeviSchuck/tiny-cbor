@@ -22,6 +22,24 @@ jobs:
         with:
           token: ${{ secrets.RELEASE_PLEASE_PAT }}
           release-type: simple
+      - uses: denoland/setup-deno@v2
+        if: ${{ steps.release.outputs.prs_created }}
+        with:
+          deno-version: v2.x
+      - uses: actions/checkout@v4
+        if: ${{ steps.release.outputs.prs_created }}
+      - name: Update release PR
+        if: ${{ steps.release.outputs.prs_created }}
+        shell: bash
+        run: |
+          prBranch=${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+          echo "Branch name ${prBranch}"
+          git fetch origin "${prBranch}"
+          git checkout "${prBranch}"
+          deno task version
+          git config user.name "Levi Schuck"
+          git config user.email "me@levischuck.com"
+          git add . && git commit -m "chore: Update version in deno" && git push || echo "No update needed"
       - uses: actions/checkout@v4
         if: ${{ steps.release.outputs.release_created }}
       - name: Get tag version
@@ -41,20 +59,6 @@ jobs:
       - name: npm build
         if: ${{ steps.release.outputs.release_created }}
         run: deno task npm ${{steps.get_tag_version.outputs.TAG_VERSION}}
-      - uses: actions/checkout@v4
-        if: ${{ steps.release.outputs.prs_created }}
-      - name: Update release PR
-        if: ${{ steps.release.outputs.prs_created }}
-        shell: bash
-        run: |
-          prBranch=${{ fromJSON(steps.release.outputs.pr).headBranchName }}
-          echo "Branch name ${prBranch}"
-          git fetch origin "${prBranch}"
-          git checkout "${prBranch}"
-          deno task version
-          git config user.name "Levi Schuck"
-          git config user.email "me@levischuck.com"
-          git add . && git commit -m "chore: Update version in deno" && git push || echo "No update needed"
       - name: npm publish
         if: ${{ steps.release.outputs.release_created }}
         env:
