@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.4](https://github.com/LeviSchuck/tiny-cbor/compare/v0.2.3...v0.2.4) (2025-02-05)
+
+
+### Bug Fixes
+
+* ... ([43a5f55](https://github.com/LeviSchuck/tiny-cbor/commit/43a5f55479ea276c9d31c1a2d1fbf65de54cf340))
+* Dummy release ([3b2533e](https://github.com/LeviSchuck/tiny-cbor/commit/3b2533e44fede9e0adf98f66aa01e1f6acce7fd9))
+
 ## [0.2.3](https://github.com/LeviSchuck/tiny-cbor/compare/0.2.2...v0.2.3) (2025-02-05)
 
 
