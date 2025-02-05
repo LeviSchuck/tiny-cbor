@@ -41,6 +41,8 @@ jobs:
       - name: npm build
         if: ${{ steps.release.outputs.release_created }}
         run: deno task npm ${{steps.get_tag_version.outputs.TAG_VERSION}}
+      - uses: actions/checkout@v4
+        if: ${{ steps.release.outputs.prs_created }}
       - name: Update release PR
         if: ${{ steps.release.outputs.prs_created }}
         shell: bash
