@@ -17,17 +17,17 @@ jobs:
         env:
           ATTEMPT: ${{ github.run_attempt }}
         run: echo "Run attempt $ATTEMPT"
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_PAT }}
+          release-type: simple
       - uses: actions/checkout@v4
         if: ${{ steps.release.outputs.release_created }}
       - name: Get tag version
         if: ${{ steps.release.outputs.release_created }}
         id: get_tag_version
         run: echo TAG_VERSION=${GITHUB_REF/refs\/tags\//} >> $GITHUB_OUTPUT
-      - uses: googleapis/release-please-action@v4
-        id: release
-        with:
-          token: ${{ secrets.RELEASE_PLEASE_PAT }}
-          release-type: simple
       - uses: denoland/setup-deno@v2
         if: ${{ steps.release.outputs.release_created }}
         with:
