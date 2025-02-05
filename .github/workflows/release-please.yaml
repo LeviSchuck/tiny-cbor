@@ -29,13 +29,14 @@ jobs:
       - uses: actions/checkout@v4
         if: ${{ steps.release.outputs.prs_created }}
       - name: Update release PR
-        if: ${{ steps.release.outputs.prs_created }}
+        if: ${{ steps.release.outputs.prs_created && steps.release.outputs.pr }}
         shell: bash
+        env:
+          BRANCH: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
         run: |
-          prBranch=${{ fromJSON(steps.release.outputs.pr).headBranchName }}
-          echo "Branch name ${prBranch}"
-          git fetch origin "${prBranch}"
-          git checkout "${prBranch}"
+          echo "Branch name ${BRANCH}"
+          git fetch origin "${BRANCH}"
+          git checkout "${BRANCH}"
           deno task version
           git config user.name "Levi Schuck"
           git config user.email "me@levischuck.com"
