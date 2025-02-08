@@ -1,8 +1,7 @@
 //deno-lint-ignore-file no-explicit-any
-import {
-  assertEquals,
-  assertThrows,
-} from "https://deno.land/std@0.224.0/testing/asserts.ts";
+
+import { assertEquals, assertThrows } from "jsr:@std/assert";
+import { decodeHex } from "jsr:@levischuck/tiny-encodings";
 import { CBORTag, decodeCBOR, decodePartialCBOR, encodeCBOR } from "./cbor.ts";
 import {
   APPLE_MACBOOK_WEBAUTHN_PAYLOAD,
@@ -20,7 +19,6 @@ import {
   WEBAUTHN_REGISTRATION_PAYLOAD,
   YUBIKEY_WEBAUTHN_PAYLOAD,
 } from "./test_data.ts";
-import { decodeHex } from "https://deno.land/x/tiny_encodings@0.1.0/encoding.ts";
 
 Deno.test({
   name: "Rejects empty input",

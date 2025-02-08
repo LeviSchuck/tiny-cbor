@@ -42,3 +42,41 @@ This implementation has the following constraints:
 
 Maps that have duplicate keys will throw an error during decoding. Decoding data
 that is incomplete will throw an error during decoding.
+
+## Example
+
+```ts
+// NPM
+// import { decodeCBOR } from "@levischuck/tiny-cbor";
+// or JSR
+// import { decodeCBOR } from "jsr:@levischuck/tiny-cbor";
+import { decodeCBOR } from "./index.ts";
+// Get your bytes somehow, directly or with decodeBase64 / decodeHex (available through tiny-encodings)
+const HELLO_WORLD_BYTES = new Uint8Array([
+  107, // String wih length 11
+  104, // h
+  101, // e
+  108, // l
+  108, // l
+  111, // o
+  32, // Space
+  119, // w
+  111, // o
+  114, // r
+  108, // l
+  100, // d
+]);
+const helloWorld = decodeCBOR(HELLO_WORLD_BYTES);
+if ("hello world" == helloWorld) {
+  console.log("Success!");
+}
+```
+
+## Where to get it
+
+This library is available on
+[NPM](https://www.npmjs.com/package/@levischuck/tiny-cbor) and
+[JSR](https://jsr.io/@levischuck/tiny-cbor).
+
+This library is no longer automatically published to Deno's Third Party Modules.
+Newer versions may appear on deno.land/x, but do not work.
