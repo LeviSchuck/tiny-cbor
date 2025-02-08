@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.9](https://github.com/LeviSchuck/tiny-cbor/compare/v0.2.8...v0.2.9) (2025-02-08)
+
+
+### Bug Fixes
+
+* all JSR badge ([06dcc8c](https://github.com/LeviSchuck/tiny-cbor/commit/06dcc8c4bf5ac467ce582bf6f857d6db359e0971))
+
 ## [0.2.8](https://github.com/LeviSchuck/tiny-cbor/compare/v0.2.7...v0.2.8) (2025-02-05)
 
 
