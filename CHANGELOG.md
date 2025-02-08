@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.10](https://github.com/LeviSchuck/tiny-cbor/compare/v0.2.9...v0.2.10) (2025-02-08)
+
+
+### Bug Fixes
+
+* Add where to find and move test imports to JSR ([f1ab683](https://github.com/LeviSchuck/tiny-cbor/commit/f1ab6836c2dfc97336eac248bb990316bad23eaf))
+
 ## [0.2.9](https://github.com/LeviSchuck/tiny-cbor/compare/v0.2.8...v0.2.9) (2025-02-08)
 
 
