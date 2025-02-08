@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.11](https://github.com/LeviSchuck/tiny-cbor/compare/v0.2.10...v0.2.11) (2025-02-08)
+
+
+### Bug Fixes
+
+* Deno check docs and badge style ([40b56e1](https://github.com/LeviSchuck/tiny-cbor/commit/40b56e1e72a05e16c7796d2688a38331f62d502a))
+
 ## [0.2.10](https://github.com/LeviSchuck/tiny-cbor/compare/v0.2.9...v0.2.10) (2025-02-08)
 
 
