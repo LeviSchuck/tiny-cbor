@@ -50,7 +50,7 @@ that is incomplete will throw an error during decoding.
 // or JSR
 // import { decodeCBOR } from "jsr:@levischuck/tiny-cbor";
 import { decodeCBOR } from "./index.ts";
-// Get your bytes somehow, directly or with decodeBase64 / decodeHex (available through tiny-encodings)
+// Get your bytes somehow, directly or with decodeBase64 / decodeHex (available through @levischuck/tiny-encodings)
 const HELLO_WORLD_BYTES = new Uint8Array([
   107, // String wih length 11
   104, // h

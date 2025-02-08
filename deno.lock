@@ -1,13 +1,13 @@
 {
   "version": "4",
   "specifiers": {
-    "jsr:@levischuck/tiny-encodings@*": "0.2.7",
+    "jsr:@levischuck/tiny-encodings@*": "0.2.10",
     "jsr:@std/assert@*": "1.0.11",
     "jsr:@std/internal@^1.0.5": "1.0.5"
   },
   "jsr": {
-    "@levischuck/tiny-encodings@0.2.7": {
-      "integrity": "df5c952be1242dde49c20a083580748833a2e2ae7d38d00bdb9fae5c287bb96b"
+    "@levischuck/tiny-encodings@0.2.10": {
+      "integrity": "c25912ee2cd54986033e2d4de8f638268c574594396efa4e88c8d606849f25f0"
     },
     "@std/assert@1.0.11": {
       "integrity": "2461ef3c368fe88bc60e186e7744a93112f16fd110022e113a0849e94d1c83c1",
