@@ -15,6 +15,8 @@ jobs:
           deno-version: v2.x
       - name: Check formatting
         run: deno fmt --check
+      - name: Test with coverage output
+        run: deno test --doc --coverage=coverage
       - name: Lint source
         run: deno lint
       - name: Test with coverage output
