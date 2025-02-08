@@ -5,7 +5,7 @@
 [![](https://img.shields.io/github/v/tag/levischuck/tiny-cbor?label=npm&logo=npm&style=flat-square)](https://www.npmjs.com/package/@levischuck/tiny-cbor)
 [![](https://img.shields.io/jsr/v/%40levischuck/tiny-cbor?style=flat-square&logo=jsr&label=JSR)](https://jsr.io/@levischuck/tiny-cbor)
 [![](https://img.shields.io/github/license/levischuck/tiny-cbor&style=flat-square)](https://github.com/LeviSchuck/tiny-cbor/blob/main/LICENSE.txt)
-![](https://img.shields.io/bundlephobia/min/%40levischuck/tiny-cbor)
+![](https://img.shields.io/bundlephobia/min/%40levischuck/tiny-cbor?style=flat-square)
 
 This minimal generic library decodes and encodes most useful CBOR structures
 into simple JavaScript structures:
