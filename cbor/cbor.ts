@@ -115,7 +115,7 @@ function decodeArray(
   }
   const [length, lengthConsumed] = decodeLength(data, argument, index);
   let consumedLength = lengthConsumed;
-  const value = [];
+  const value : CBORType[] = [];
   for (let i = 0; i < length; i++) {
     const remainingDataLength = data.byteLength - index - consumedLength;
     if (remainingDataLength <= 0) {
@@ -415,7 +415,7 @@ function encodePartialCBOR(data: CBORType, output: (number | Uint8Array)[]) {
  *   When the data stream ends early or the CBOR data is not well formed
  */
 export function decodePartialCBOR(
-  data: DataView | Uint8Array | ArrayBuffer,
+  data: DataView | Uint8Array | ArrayBuffer | ArrayBufferLike,
   index: number,
 ): [CBORType, number] {
   if (data.byteLength === 0 || data.byteLength <= index || index < 0) {
@@ -425,6 +425,8 @@ export function decodePartialCBOR(
   if (data instanceof Uint8Array) {
     return decodeNext(new DataView(data.buffer), index);
   } else if (data instanceof ArrayBuffer) {
+    return decodeNext(new DataView(data), index);
+  } else if (data instanceof SharedArrayBuffer) {
     return decodeNext(new DataView(data), index);
   }
 
@@ -457,7 +459,7 @@ export function decodePartialCBOR(
  * @returns
  */
 export function decodeCBOR(
-  data: DataView | Uint8Array | ArrayBuffer,
+  data: DataView | Uint8Array | ArrayBuffer | ArrayBufferLike,
 ): CBORType {
   const [value, length] = decodePartialCBOR(data, 0);
   if (length !== data.byteLength) {
