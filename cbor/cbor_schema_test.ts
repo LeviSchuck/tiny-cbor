@@ -6,11 +6,30 @@ import { decodeCBOR } from "./cbor.ts";
 const ObjectDefinition = cs.map([
   cs.field("name", cs.string),
   cs.field("age", cs.integer),
-  cs.numberField(3, "isAdmin", cs.boolean)
+  cs.numberField(3, "isAdmin", cs.boolean),
 ]);
 
 Deno.test("Test basic object schema", () => {
-  const cbor = new Uint8Array([0xA3, 0x64, 0x6E, 0x61, 0x6D, 0x65, 0x63, 0x4A, 0x6F, 0x65, 0x63, 0x61, 0x67, 0x65, 0x18, 0x2D, 0x03, 0xF5]);
+  const cbor = new Uint8Array([
+    0xA3,
+    0x64,
+    0x6E,
+    0x61,
+    0x6D,
+    0x65,
+    0x63,
+    0x4A,
+    0x6F,
+    0x65,
+    0x63,
+    0x61,
+    0x67,
+    0x65,
+    0x18,
+    0x2D,
+    0x03,
+    0xF5,
+  ]);
   const object = cs.decode(ObjectDefinition, cbor);
   assertEquals(object.name, "Joe");
   assertEquals(object.age, 45);
@@ -23,28 +42,28 @@ Deno.test("Test type validation - primitive types", () => {
   assertThrows(
     () => cs.string.decode(42),
     Error,
-    "Expected string"
+    "Expected string",
   );
 
   // Integer schema should reject strings
   assertThrows(
     () => cs.integer.decode("42"),
     Error,
-    "Expected uint8"
+    "Expected uint8",
   );
 
   // Integer schema should reject floats
   assertThrows(
     () => cs.integer.decode(42.5),
     Error,
-    "Expected uint8"
+    "Expected uint8",
   );
 
   // Boolean schema should reject strings
   assertThrows(
     () => cs.boolean.decode("true"),
     Error,
-    "Expected boolean"
+    "Expected boolean",
   );
 });
 
@@ -55,14 +74,14 @@ Deno.test("Test type validation - array schema", () => {
   assertThrows(
     () => numberArraySchema.decode("not an array"),
     Error,
-    "Expected array"
+    "Expected array",
   );
 
   // Should reject array with wrong element type
   assertThrows(
     () => numberArraySchema.decode([1, "two", 3]),
     Error,
-    "Error decoding array item"
+    "Error decoding array item",
   );
 });
 
@@ -73,21 +92,21 @@ Deno.test("Test type validation - tuple schema", () => {
   assertThrows(
     () => personTupleSchema.decode("not a tuple"),
     Error,
-    "Expected array for tuple"
+    "Expected array for tuple",
   );
 
   // Should reject tuple with wrong length
   assertThrows(
     () => personTupleSchema.decode(["John", 30]),
     Error,
-    "Expected tuple of length 3"
+    "Expected tuple of length 3",
   );
 
   // Should reject tuple with wrong types
   assertThrows(
     () => personTupleSchema.decode(["John", "30", true]),
     Error,
-    "Error decoding tuple item"
+    "Error decoding tuple item",
   );
 });
 
@@ -98,44 +117,47 @@ Deno.test("Test type validation - union schema", () => {
   assertThrows(
     () => stringOrNumberSchema.decode(true),
     Error,
-    "Value doesn't match any schema in union"
+    "Value doesn't match any schema in union",
   );
 
   assertThrows(
     () => stringOrNumberSchema.decode(new Map()),
     Error,
-    "Value doesn't match any schema in union"
+    "Value doesn't match any schema in union",
   );
 });
 
 Deno.test("Test type validation - map schema", () => {
   const userSchema = cs.map([
     cs.field("name", cs.string),
-    cs.field("age", cs.integer)
+    cs.field("age", cs.integer),
   ]);
 
   // Should reject non-map values
   assertThrows(
     () => userSchema.decode([]),
     Error,
-    "Expected Map"
+    "Expected Map",
   );
 
   // Should reject missing required fields
   assertThrows(
     () => userSchema.decode(new Map([["name", "John"]])), // missing age
     Error,
-    "Missing required field"
+    "Missing required field",
   );
 
   // Should reject wrong field types
   assertThrows(
-    () => userSchema.decode(new Map([
-      ["name", "John"],
-      ["age", "30"] // age should be number
-    ])),
+    () =>
+      userSchema.decode(
+        new Map([
+          ["name", "John"],
+          ["age", "30"], // age should be number
+        ]),
+      ),
     Error,
-    "Error decoding field age"
+    "Error decoding field age",
   );
 });
 
@@ -160,13 +182,13 @@ Deno.test("Test tuple schema", () => {
 // Union test
 Deno.test("Test union schema", () => {
   const stringOrNumberSchema = cs.union([cs.string, cs.float]);
-  
+
   // Test string case
   const stringValue = "hello";
   const encodedString = cs.encode(stringOrNumberSchema, stringValue);
   const decodedString = cs.decode(stringOrNumberSchema, encodedString);
   assertEquals(decodedString, stringValue);
-  
+
   // Test number case
   const numberValue = 42.5;
   const encodedNumber = cs.encode(stringOrNumberSchema, numberValue);
@@ -189,10 +211,13 @@ Deno.test("Test complex object schema", () => {
     cs.field("name", cs.string),
     cs.field("age", cs.integer),
     cs.field("tags", cs.array(cs.string)),
-    cs.field("metadata", cs.optional(cs.map([
-      cs.field("createdAt", cs.string),
-      cs.field("updatedAt", cs.string)
-    ])))
+    cs.field(
+      "metadata",
+      cs.optional(cs.map([
+        cs.field("createdAt", cs.string),
+        cs.field("updatedAt", cs.string),
+      ])),
+    ),
   ]);
 
   const testUser = {
@@ -201,8 +226,8 @@ Deno.test("Test complex object schema", () => {
     tags: ["developer", "typescript"],
     metadata: {
       createdAt: "2023-01-01",
-      updatedAt: "2023-01-02"
-    }
+      updatedAt: "2023-01-02",
+    },
   };
 
   const encoded = cs.encode(userSchema, testUser);
@@ -214,7 +239,7 @@ Deno.test("Test complex object schema", () => {
     name: "Jane",
     age: 25,
     tags: ["designer", "ui"],
-    metadata: undefined
+    metadata: undefined,
   };
 
   const encodedNoMeta = cs.encode(userSchema, testUserNoMetadata);
@@ -227,13 +252,13 @@ Deno.test("Test nested CBOR schema", () => {
   // Define an inner object schema
   const innerSchema = cs.map([
     cs.field("x", cs.integer),
-    cs.field("y", cs.integer)
+    cs.field("y", cs.integer),
   ]);
 
   // Create a schema that nests the inner object
   const outerSchema = cs.map([
     cs.field("name", cs.string),
-    cs.field("coordinates", cs.nested(innerSchema))
+    cs.field("coordinates", cs.nested(innerSchema)),
   ]);
 
   // Test data
@@ -241,8 +266,8 @@ Deno.test("Test nested CBOR schema", () => {
     name: "Point A",
     coordinates: {
       x: 10,
-      y: 20
-    }
+      y: 20,
+    },
   };
 
   // Test encoding and decoding
@@ -253,7 +278,7 @@ Deno.test("Test nested CBOR schema", () => {
 
 Deno.test("Test nested CBOR schema validation", () => {
   const innerSchema = cs.map([
-    cs.field("value", cs.integer)
+    cs.field("value", cs.integer),
   ]);
   const nestedSchema = cs.nested(innerSchema);
 
@@ -261,29 +286,32 @@ Deno.test("Test nested CBOR schema validation", () => {
   assertThrows(
     () => nestedSchema.decode("not bytes"),
     Error,
-    "Expected Uint8Array for nested CBOR"
+    "Expected Uint8Array for nested CBOR",
   );
 
   // Should reject invalid CBOR bytes
   assertThrows(
     () => nestedSchema.decode(new Uint8Array([0xFF, 0xFF])), // Invalid CBOR bytes
     Error,
-    "Error decoding nested CBOR"
+    "Error decoding nested CBOR",
   );
 
   // Should reject inner content that doesn't match schema
   const invalidInner = {
-    value: "not a number" // Should be integer
+    value: "not a number", // Should be integer
   };
   assertThrows(
     () => {
-      const encoded = cs.encode(cs.map([
-        cs.field("value", cs.string)
-      ]), invalidInner);
+      const encoded = cs.encode(
+        cs.map([
+          cs.field("value", cs.string),
+        ]),
+        invalidInner,
+      );
       nestedSchema.decode(encoded);
     },
     Error,
-    "Error decoding nested CBOR"
+    "Error decoding nested CBOR",
   );
 });
 
@@ -292,12 +320,12 @@ Deno.test("Test complex nested CBOR schema", () => {
   // Define schemas for different parts of the structure
   const locationSchema = cs.map([
     cs.field("latitude", cs.float),
-    cs.field("longitude", cs.float)
+    cs.field("longitude", cs.float),
   ]);
 
   const metadataSchema = cs.map([
     cs.field("created", cs.string),
-    cs.field("tags", cs.array(cs.string))
+    cs.field("tags", cs.array(cs.string)),
   ]);
 
   // Create a complex schema with multiple levels of nesting
@@ -305,7 +333,7 @@ Deno.test("Test complex nested CBOR schema", () => {
     cs.field("id", cs.string),
     cs.field("location", cs.nested(locationSchema)),
     cs.field("metadata", cs.nested(metadataSchema)),
-    cs.field("nested_array", cs.array(cs.nested(locationSchema)))
+    cs.field("nested_array", cs.array(cs.nested(locationSchema))),
   ]);
 
   // Test data with multiple nested structures
@@ -313,16 +341,16 @@ Deno.test("Test complex nested CBOR schema", () => {
     id: "test-123",
     location: {
       latitude: 37.7749,
-      longitude: -122.4194
+      longitude: -122.4194,
     },
     metadata: {
       created: "2024-01-01",
-      tags: ["test", "example"]
+      tags: ["test", "example"],
     },
     nested_array: [
       { latitude: 40.7128, longitude: -74.0060 },
-      { latitude: 51.5074, longitude: -0.1278 }
-    ]
+      { latitude: 51.5074, longitude: -0.1278 },
+    ],
   };
 
   // Test encoding and decoding of complex nested structure
@@ -336,13 +364,13 @@ Deno.test("Test tagged nested document schema", () => {
   // Define the inner document schema
   const documentSchema = cs.map([
     cs.field("a", cs.integer),
-    cs.field("b", cs.integer)
+    cs.field("b", cs.integer),
   ]);
 
   // Create the outer schema with version and tagged nested document
   const containerSchema = cs.map([
     cs.field("version", cs.integer),
-    cs.field("document", cs.tagged(888, cs.nested(documentSchema)))
+    cs.field("document", cs.tagged(888, cs.nested(documentSchema))),
   ]);
 
   // Test data
@@ -350,8 +378,8 @@ Deno.test("Test tagged nested document schema", () => {
     version: 1,
     document: {
       a: 1,
-      b: 2
-    }
+      b: 2,
+    },
   };
 
   // Test encoding and decoding

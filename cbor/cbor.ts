@@ -115,7 +115,7 @@ function decodeArray(
   }
   const [length, lengthConsumed] = decodeLength(data, argument, index);
   let consumedLength = lengthConsumed;
-  const value : CBORType[] = [];
+  const value: CBORType[] = [];
   for (let i = 0; i < length; i++) {
     const remainingDataLength = data.byteLength - index - consumedLength;
     if (remainingDataLength <= 0) {
