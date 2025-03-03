@@ -20,20 +20,20 @@ Deno.test("Integer types with invalid inputs - fromCBORType", () => {
 });
 
 Deno.test("Integer types with invalid inputs - toCBORType", () => {
-    // Integer schema should reject strings
-    assertThrows(
-      () => integer.toCBORType("42" as unknown as number),
-      Error,
-      "Value 42 is not a valid integer",
-    );
-  
-    // Integer schema should reject objects
-    assertThrows(
-      () => integer.toCBORType({} as unknown as number),
-      Error,
-      "not a valid integer",
-    );
-})
+  // Integer schema should reject strings
+  assertThrows(
+    () => integer.toCBORType("42" as unknown as number),
+    Error,
+    "Value 42 is not a valid integer",
+  );
+
+  // Integer schema should reject objects
+  assertThrows(
+    () => integer.toCBORType({} as unknown as number),
+    Error,
+    "not a valid integer",
+  );
+});
 
 // Test primitive types with valid inputs for toCBORType
 Deno.test("Integer types with valid inputs - toCBORType", () => {
@@ -47,4 +47,3 @@ Deno.test("Integer types with valid inputs - fromCBORType", () => {
   const intValue = 42;
   assertEquals(integer.fromCBORType(intValue), intValue);
 });
-

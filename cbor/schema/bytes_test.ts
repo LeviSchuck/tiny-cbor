@@ -82,4 +82,4 @@ Deno.test("Bytes types with valid inputs - fromCBORType", () => {
   // Test bytes with data
   const dataBytes = new Uint8Array([1, 2, 3, 4, 5]);
   assertEquals(bytes.fromCBORType(dataBytes), dataBytes);
-}); 
+});

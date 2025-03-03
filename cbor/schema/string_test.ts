@@ -74,4 +74,4 @@ Deno.test("String types with valid inputs - fromCBORType", () => {
   // Test string
   const stringValue = "test string";
   assertEquals(string.fromCBORType(stringValue), stringValue);
-}); 
+});

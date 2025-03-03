@@ -76,7 +76,7 @@ Deno.test("Tuple types with valid inputs", () => {
   const empty: [] = [];
   const encodedEmpty = emptySchema.toCBORType(empty);
   assertEquals(emptySchema.fromCBORType(encodedEmpty), empty);
-}); 
+});
 
 type AssertEqual<T, Expected> = T extends Expected ? Expected extends T ? T
   : never

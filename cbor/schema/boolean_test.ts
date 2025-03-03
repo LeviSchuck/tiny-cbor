@@ -76,4 +76,4 @@ Deno.test("Boolean types with valid inputs - fromCBORType", () => {
   assertEquals(boolean.fromCBORType(true), true);
   // Test false
   assertEquals(boolean.fromCBORType(false), false);
-}); 
+});

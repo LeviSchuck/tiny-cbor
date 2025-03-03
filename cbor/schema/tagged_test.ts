@@ -58,5 +58,8 @@ Deno.test("Tagged types with valid inputs", () => {
   assertEquals(decoded, dateStr);
 
   // Test round trip
-  assertEquals(dateSchema.fromCBORType(dateSchema.toCBORType(dateStr)), dateStr);
-}); 
+  assertEquals(
+    dateSchema.fromCBORType(dateSchema.toCBORType(dateStr)),
+    dateStr,
+  );
+});

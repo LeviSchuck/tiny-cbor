@@ -1,5 +1,5 @@
-import { CBORSchemaType } from "./type.ts";
-import { type CBORType } from "../cbor.ts";
+import type { CBORSchemaType } from "./type.ts";
+import type { CBORType } from "../cbor.ts";
 
 /**
  * Creates a schema for optional values that might be undefined
@@ -16,7 +16,9 @@ import { type CBORType } from "../cbor.ts";
  * const decoded2 = cs.fromCBOR(optionalNumberSchema, encoded2); // undefined
  * ```
  */
-export function optional<T>(schema: CBORSchemaType<T>): CBORSchemaType<T | undefined> {
+export function optional<T>(
+  schema: CBORSchemaType<T>,
+): CBORSchemaType<T | undefined> {
   return {
     fromCBORType(data: CBORType): T | undefined {
       if (data === undefined || data === null) {
@@ -32,4 +34,4 @@ export function optional<T>(schema: CBORSchemaType<T>): CBORSchemaType<T | undef
     },
     isOptional: true,
   };
-} 
+}

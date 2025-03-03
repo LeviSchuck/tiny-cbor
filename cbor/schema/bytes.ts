@@ -1,5 +1,5 @@
-import { CBORSchemaType } from "./type.ts";
-import { type CBORType } from "../cbor.ts";
+import type { CBORSchemaType } from "./type.ts";
+import type { CBORType } from "../cbor.ts";
 
 /**
  * Schema for byte strings (Uint8Array)
@@ -25,4 +25,4 @@ export const bytes: CBORSchemaType<Uint8Array> = {
     }
     return value;
   },
-}; 
+};

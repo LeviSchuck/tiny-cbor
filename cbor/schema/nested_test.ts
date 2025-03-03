@@ -1,10 +1,11 @@
 import { assertThrows } from "jsr:@std/assert";
 import { nested } from "./nested.ts";
-import { map, field } from "./map.ts";
+import { field, map } from "./map.ts";
 import { string } from "./string.ts";
 import { integer } from "./integer.ts";
 import { assertEquals } from "jsr:@std/assert";
 import { encodeCBOR } from "../cbor.ts";
+import type { ExtractFieldType } from "./type.ts";
 
 // Type validation tests
 Deno.test("Nested types with invalid inputs - fromCBORType", () => {
@@ -44,7 +45,7 @@ Deno.test("Nested types with invalid inputs - toCBORType", () => {
 
   // Nested schema should reject values that don't match inner schema
   assertThrows(
-    () => nestedSchema.toCBORType({ version: "not a number" } as any),
+    () => nestedSchema.toCBORType({ version: "not a number" } as unknown as ExtractFieldType<typeof nestedSchema>),
     Error,
     "Error encoding nested CBOR",
   );
@@ -89,4 +90,4 @@ Deno.test("Nested types with valid inputs", () => {
 
   const encodedOuter = outerSchema.toCBORType(outer);
   assertEquals(outerSchema.fromCBORType(encodedOuter), outer);
-}); 
+});

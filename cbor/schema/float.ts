@@ -1,5 +1,5 @@
-import { CBORSchemaType } from "./type.ts";
-import { type CBORType } from "../cbor.ts";
+import type { CBORSchemaType } from "./type.ts";
+import type { CBORType } from "../cbor.ts";
 
 /**
  * Schema for floating point numbers
@@ -24,4 +24,4 @@ export const float: CBORSchemaType<number> = {
     }
     return value;
   },
-}; 
+};

@@ -1,5 +1,5 @@
-import { CBORSchemaType } from "./type.ts";
-import { type CBORType } from "../cbor.ts";
+import type { CBORSchemaType } from "./type.ts";
+import type { CBORType } from "../cbor.ts";
 
 /**
  * Schema for UTF-8 encoded strings
@@ -24,4 +24,4 @@ export const string: CBORSchemaType<string> = {
     }
     return value;
   },
-}; 
+};

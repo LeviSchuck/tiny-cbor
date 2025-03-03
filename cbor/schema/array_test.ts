@@ -1,8 +1,8 @@
 import { assertThrows } from "jsr:@std/assert";
 import { array } from "./array.ts";
 import { integer } from "./integer.ts";
-import { CBORType } from "../cbor.ts";
-import { CBORSchemaType } from "./type.ts";
+import type { CBORType } from "../cbor.ts";
+import type { CBORSchemaType } from "./type.ts";
 
 Deno.test("Test type validation - array schema", () => {
   const numberArraySchema = array(integer);
@@ -21,7 +21,6 @@ Deno.test("Test type validation - array schema", () => {
     "Error decoding array item",
   );
 });
-
 
 Deno.test("Test array schema toCBORType exceptions", () => {
   const arraySchema = array(integer);

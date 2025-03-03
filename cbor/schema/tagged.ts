@@ -1,5 +1,5 @@
-import { CBORSchemaType } from "./type.ts";
-import { type CBORType, CBORTag } from "../cbor.ts";
+import type { CBORSchemaType } from "./type.ts";
+import { CBORTag, type CBORType } from "../cbor.ts";
 
 /**
  * Creates a schema for tagged CBOR values
@@ -39,4 +39,4 @@ export function tagged<T>(
       return new CBORTag(tagNumber, encodedValue);
     },
   };
-} 
+}

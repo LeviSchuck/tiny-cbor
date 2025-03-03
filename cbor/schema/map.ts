@@ -1,5 +1,10 @@
-import { CBORSchemaType, ExtractFieldType, FieldDefinition, MapSchemaType } from "./type.ts";
-import { type CBORType } from "../cbor.ts";
+import type {
+  CBORSchemaType,
+  ExtractFieldType,
+  FieldDefinition,
+  MapSchemaType,
+} from "./type.ts";
+import type { CBORType } from "../cbor.ts";
 
 /**
  * Creates a schema for CBOR maps that decode to TypeScript objects
@@ -145,4 +150,4 @@ export function numberField<T, K extends string>(
     jsKey,
     schema,
   };
-} 
+}

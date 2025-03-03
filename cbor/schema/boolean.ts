@@ -1,5 +1,5 @@
-import { CBORSchemaType } from "./type.ts";
-import { type CBORType } from "../cbor.ts";
+import type { CBORSchemaType } from "./type.ts";
+import type { CBORType } from "../cbor.ts";
 
 /**
  * Schema for boolean values
@@ -24,4 +24,4 @@ export const boolean: CBORSchemaType<boolean> = {
     }
     return value;
   },
-}; 
+};

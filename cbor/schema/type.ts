@@ -1,4 +1,4 @@
-import { CBORType } from "../cbor.ts";
+import type { CBORType } from "../cbor.ts";
 
 /**
  * Base interface for all CBOR schema types.
@@ -45,7 +45,6 @@ export interface CBORSchemaType<T> {
  */
 export type CBORSchemaValue<T> = T extends CBORSchemaType<infer U> ? U : never;
 
-
 /**
  * Defines a field in a map schema, mapping CBOR keys to TypeScript object properties.
  *
@@ -86,10 +85,11 @@ type Expand<T> = T extends (...args: infer A) => infer R
 /**
  * Type helper that constructs a TypeScript type from an array of field definitions
  */
-export type MapSchemaType<Fields extends FieldDefinition<unknown, string>[]> = Expand<
-  {
-    [K in ExtractJsKey<Fields[number]>]: ExtractFieldType<
-      Extract<Fields[number], { jsKey: K }>
-    >;
-  }
->;
+export type MapSchemaType<Fields extends FieldDefinition<unknown, string>[]> =
+  Expand<
+    {
+      [K in ExtractJsKey<Fields[number]>]: ExtractFieldType<
+        Extract<Fields[number], { jsKey: K }>
+      >;
+    }
+  >;

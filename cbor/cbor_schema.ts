@@ -1,4 +1,4 @@
-import { CBORTag, type CBORType, decodeCBOR, encodeCBOR } from "./cbor.ts";
+import { decodeCBOR, encodeCBOR } from "./cbor.ts";
 import { array } from "./schema/array.ts";
 import { integer } from "./schema/integer.ts";
 import { string } from "./schema/string.ts";
@@ -9,9 +9,12 @@ import { tuple } from "./schema/tuple.ts";
 import { union } from "./schema/union.ts";
 import { tagged } from "./schema/tagged.ts";
 import { optional } from "./schema/optional.ts";
-import { map, field, numberField } from "./schema/map.ts";
+import { field, map, numberField } from "./schema/map.ts";
 import { nested } from "./schema/nested.ts";
-import { CBORSchemaType, ExtractFieldType, FieldDefinition, MapSchemaType } from "./schema/type.ts";
+import type {
+  CBORSchemaType,
+  FieldDefinition,
+} from "./schema/type.ts";
 
 /**
  * Main schema builder class containing all schema constructors and primitive types.

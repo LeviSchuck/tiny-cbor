@@ -1,6 +1,6 @@
 import { assertEquals, assertThrows } from "jsr:@std/assert";
 import { cs } from "./cbor_schema.ts";
-import { CBORTag, type CBORType, decodeCBOR } from "./cbor.ts";
+import type { CBORType } from "./cbor.ts";
 import type { CBORSchemaType } from "./schema/type.ts";
 
 // Basic object test
@@ -36,8 +36,6 @@ Deno.test("Test basic object schema", () => {
   assertEquals(object.age, 45);
   assertEquals(object.isAdmin, true);
 });
-
-
 
 // Test complex union schema error handling
 Deno.test("Test complex union schema error handling", () => {
@@ -90,7 +88,6 @@ Deno.test("Test complex union schema error handling", () => {
     "Value doesn't match any schema in union for encoding",
   );
 });
-
 
 // Test cases for complex nested structures with maps
 Deno.test("Test complex nested map schema with invalid data", () => {

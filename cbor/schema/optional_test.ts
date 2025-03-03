@@ -21,7 +21,10 @@ Deno.test("Optional types with invalid inputs - toCBORType", () => {
 
   // Optional schema should reject invalid values for inner schema
   assertThrows(
-    () => optionalNumberSchema.toCBORType("not a number" as unknown as number | undefined),
+    () =>
+      optionalNumberSchema.toCBORType(
+        "not a number" as unknown as number | undefined,
+      ),
     Error,
     "Expected number",
   );
@@ -54,5 +57,8 @@ Deno.test("Optional types with valid inputs", () => {
 
   // Test with undefined
   const encodedStrUndefined = optionalStringSchema.toCBORType(undefined);
-  assertEquals(optionalStringSchema.fromCBORType(encodedStrUndefined), undefined);
-}); 
+  assertEquals(
+    optionalStringSchema.fromCBORType(encodedStrUndefined),
+    undefined,
+  );
+});

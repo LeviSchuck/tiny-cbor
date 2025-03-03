@@ -80,4 +80,4 @@ Deno.test("Float types with valid inputs - fromCBORType", () => {
   assertEquals(float.fromCBORType(3.14), 3.14);
   // Test negative
   assertEquals(float.fromCBORType(-1.5), -1.5);
-}); 
+});

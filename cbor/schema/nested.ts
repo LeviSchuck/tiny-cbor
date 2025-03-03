@@ -1,5 +1,5 @@
-import { CBORSchemaType } from "./type.ts";
-import { type CBORType } from "../cbor.ts";
+import type { CBORSchemaType } from "./type.ts";
+import type { CBORType } from "../cbor.ts";
 import { decodeCBOR, encodeCBOR } from "../cbor.ts";
 
 /**
@@ -63,4 +63,4 @@ export function nested<T>(innerSchema: CBORSchemaType<T>): CBORSchemaType<T> {
       }
     },
   };
-} 
+}

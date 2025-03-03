@@ -1,5 +1,5 @@
-import { CBORSchemaType } from "./type.ts";
-import { type CBORType } from "../cbor.ts";
+import type { CBORSchemaType } from "./type.ts";
+import type { CBORType } from "../cbor.ts";
 
 /**
  * Creates a schema for fixed-length tuples with heterogeneous types
@@ -75,4 +75,4 @@ export function tuple<T extends unknown[]>(
       });
     },
   };
-} 
+}

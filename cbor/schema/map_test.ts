@@ -1,11 +1,11 @@
 import { assertThrows } from "jsr:@std/assert";
-import { map, field, numberField } from "./map.ts";
+import { field, map, numberField } from "./map.ts";
 import { float } from "./float.ts";
 import { string } from "./string.ts";
 import { integer } from "./integer.ts";
 import { optional } from "./optional.ts";
 import { assertEquals } from "jsr:@std/assert";
-import { ExtractFieldType } from "./type.ts";
+import type { ExtractFieldType } from "./type.ts";
 
 // Type validation tests
 Deno.test("Map types with invalid inputs - fromCBORType", () => {
@@ -30,10 +30,13 @@ Deno.test("Map types with invalid inputs - fromCBORType", () => {
 
   // Map schema should reject invalid field types
   assertThrows(
-    () => personSchema.fromCBORType(new Map([
-      ["name", 42],
-      ["age", 30],
-    ])),
+    () =>
+      personSchema.fromCBORType(
+        new Map([
+          ["name", 42],
+          ["age", 30],
+        ]),
+      ),
     Error,
     "Error decoding field name",
   );
@@ -47,14 +50,22 @@ Deno.test("Map types with invalid inputs - toCBORType", () => {
 
   // Map schema should reject missing required fields
   assertThrows(
-    () => personSchema.toCBORType({ name: "Alice" } as unknown as ExtractFieldType<typeof personSchema>),
+    () =>
+      personSchema.toCBORType(
+        { name: "Alice" } as unknown as ExtractFieldType<typeof personSchema>,
+      ),
     Error,
     "Missing required field: age",
   );
 
   // Map schema should reject invalid field types
   assertThrows(
-    () => personSchema.toCBORType({ name: 42, age: 30 } as unknown as ExtractFieldType<typeof personSchema>),
+    () =>
+      personSchema.toCBORType(
+        { name: 42, age: 30 } as unknown as ExtractFieldType<
+          typeof personSchema
+        >,
+      ),
     Error,
     "Error encoding field name",
   );
@@ -95,10 +106,18 @@ Deno.test("Map types with valid inputs", () => {
   };
 
   const encodedWithEmail = extendedPersonSchema.toCBORType(personWithEmail);
-  const encodedWithoutEmail = extendedPersonSchema.toCBORType(personWithoutEmail as unknown as typeof personWithEmail);
+  const encodedWithoutEmail = extendedPersonSchema.toCBORType(
+    personWithoutEmail as unknown as typeof personWithEmail,
+  );
 
-  assertEquals(extendedPersonSchema.fromCBORType(encodedWithEmail), personWithEmail);
-  assertEquals(extendedPersonSchema.fromCBORType(encodedWithoutEmail), personWithoutEmail);
+  assertEquals(
+    extendedPersonSchema.fromCBORType(encodedWithEmail),
+    personWithEmail,
+  );
+  assertEquals(
+    extendedPersonSchema.fromCBORType(encodedWithoutEmail),
+    personWithoutEmail,
+  );
 
   // Test map schema with number fields
   const scoreSchema = map([
@@ -113,4 +132,4 @@ Deno.test("Map types with valid inputs", () => {
 
   const encodedScores = scoreSchema.toCBORType(scores);
   assertEquals(scoreSchema.fromCBORType(encodedScores), scores);
-}); 
+});

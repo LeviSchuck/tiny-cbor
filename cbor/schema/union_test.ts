@@ -69,4 +69,4 @@ Deno.test("Union types with valid inputs", () => {
   const flt = 42.5;
   const encodedFlt = numberSchema.toCBORType(flt);
   assertEquals(numberSchema.fromCBORType(encodedFlt), flt);
-}); 
+});

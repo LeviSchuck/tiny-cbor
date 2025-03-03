@@ -1,5 +1,5 @@
-import { CBORSchemaType } from "./type.ts";
-import { type CBORType } from "../cbor.ts";
+import type { CBORSchemaType } from "./type.ts";
+import type { CBORType } from "../cbor.ts";
 
 /**
  * Creates a schema for union types that can be one of several types
@@ -70,4 +70,4 @@ export function union<Schemas extends CBORSchemaType<unknown>[]>(
       throw new Error("Failed to encode union value");
     },
   };
-} 
+}

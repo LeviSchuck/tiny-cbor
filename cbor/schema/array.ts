@@ -1,18 +1,18 @@
-import { CBORSchemaType } from "./type.ts";
-import { CBORType } from "../cbor.ts";
+import type { CBORSchemaType } from "./type.ts";
+import type { CBORType } from "../cbor.ts";
 /**
-   * Creates a schema for arrays of items of the same type
-   *
-   * @template T The type of array elements
-   * @param itemSchema Schema for the array elements
-   *
-   * @example
-   * ```typescript
-   * const numberArraySchema = cs.array(cs.float);
-   * const encoded = cs.toCBOR(numberArraySchema, [1, 2, 3]);
-   * const decoded = cs.fromCBOR(numberArraySchema, encoded); // [1, 2, 3]
-   * ```
-   */
+ * Creates a schema for arrays of items of the same type
+ *
+ * @template T The type of array elements
+ * @param itemSchema Schema for the array elements
+ *
+ * @example
+ * ```typescript
+ * const numberArraySchema = cs.array(cs.float);
+ * const encoded = cs.toCBOR(numberArraySchema, [1, 2, 3]);
+ * const decoded = cs.fromCBOR(numberArraySchema, encoded); // [1, 2, 3]
+ * ```
+ */
 export function array<T>(itemSchema: CBORSchemaType<T>): CBORSchemaType<T[]> {
   return {
     fromCBORType(data: CBORType): T[] {
