@@ -422,16 +422,20 @@ export function decodePartialCBOR(
     throw new Error("No data");
   }
 
-  if (data instanceof Uint8Array) {
-    return decodeNext(new DataView(data.buffer), index);
-  } else if (data instanceof ArrayBuffer) {
-    return decodeNext(new DataView(data), index);
-  } else if (data instanceof SharedArrayBuffer) {
-    return decodeNext(new DataView(data), index);
-  }
+  const prototype = Object.getPrototypeOf(data);
 
-  // otherwise, it is a data view
-  return decodeNext(data, index);
+  const isArrayBuffer = prototype === ArrayBuffer.prototype
+  const isSharedArrayBuffer = prototype === SharedArrayBuffer.prototype;
+
+  if (prototype.constructor === Uint8Array.prototype.constructor) {
+    return decodeNext(new DataView((data as Uint8Array).buffer), index);
+  } else if (isArrayBuffer || isSharedArrayBuffer) {
+    return decodeNext(new DataView(data as ArrayBuffer), index);
+  } else if (prototype === DataView.prototype) {
+    return decodeNext(data as DataView, index);
+  } else {
+    throw new Error("Unsupported data type");
+  }
 }
 
 /**

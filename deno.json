@@ -2,7 +2,8 @@
   "tasks": {
     "test": "deno test --watch",
     "npm": "deno run --allow-env --allow-read --allow-write --allow-run --allow-net scripts/npm.ts",
-    "version": "deno run --allow-read --allow-write scripts/version.ts"
+    "version": "deno run --allow-read --allow-write scripts/version.ts",
+    "local-coverage": "deno test --coverage=coverage && deno coverage --lcov --output=cov.lcov && deno coverage --html"
   },
   "lint": {
     "exclude": [
@@ -15,6 +16,11 @@
       "CHANGELOG.md",
       ".github",
       ".vscode"
+    ]
+  },
+  "test": {
+    "exclude": [
+      "CHANGELOG.md"
     ]
   },
   "name": "@levischuck/tiny-cbor",

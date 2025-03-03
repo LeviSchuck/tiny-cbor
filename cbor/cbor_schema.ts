@@ -9,42 +9,41 @@ import { CBORTag, type CBORType, decodeCBOR, encodeCBOR } from "./cbor.ts";
  * @example
  * ```typescript
  * const stringSchema: CBORSchemaType<string> = {
- *   decode: (data) => {
+ *   fromCBORType: (data) => {
  *     if (typeof data !== "string") throw new Error("Not a string");
  *     return data;
  *   },
- *   encode: (value) => value
+ *   toCBORType: (value) => value
  * };
  * ```
  */
 export interface CBORSchemaType<T> {
-  decode(data: CBORType): T;
-  encode(value: T): CBORType;
+  fromCBORType(data: CBORType): T;
+  toCBORType(value: T): CBORType;
+  isOptional?: true;
 }
 
 /**
- * Helper function to check if a schema allows undefined values.
- * Used internally to determine if a field is optional in map schemas.
- *
- * @template T The type of the schema
- * @param schema The schema to check
- * @returns true if the schema accepts undefined values
+ * Type helper that extracts the value type from a CBORSchemaType
  *
  * @example
  * ```typescript
- * const optionalString = cs.optional(cs.string);
- * console.log(isOptionalSchema(optionalString)); // true
- * console.log(isOptionalSchema(cs.string)); // false
+ * const WebAuthnSchema = cs.map([
+ *   cs.field("fmt", cs.string),
+ *   cs.field(
+ *     "attStmt",
+ *     cs.map([
+ *       cs.field("alg", cs.integer),
+ *       cs.field("sig", cs.bytes),
+ *       cs.field("x5c", cs.optional(cs.array(cs.bytes))),
+ *     ]),
+ *   ),
+ *   cs.field("authData", cs.bytes),
+ * ]);
+ * type WebAuthnSchemaValue = CBORSchemaValue<typeof WebAuthnSchema>;
  * ```
  */
-function isOptionalSchema<T>(schema: CBORSchemaType<T>): boolean {
-  try {
-    schema.decode(undefined);
-    return true;
-  } catch {
-    return false;
-  }
-}
+export type CBORSchemaValue<T> = T extends CBORSchemaType<infer U> ? U : never;
 
 /**
  * Defines a field in a map schema, mapping CBOR keys to TypeScript object properties.
@@ -57,7 +56,7 @@ function isOptionalSchema<T>(schema: CBORSchemaType<T>): boolean {
  * const nameField: FieldDefinition<string, "name"> = {
  *   key: "name",
  *   jsKey: "name",
- *   schema: cs.string
+ *   schema: cs.string,
  * };
  * ```
  */
@@ -78,14 +77,21 @@ type ExtractFieldType<F> = F extends FieldDefinition<infer T, string> ? T
  */
 type ExtractJsKey<F> = F extends FieldDefinition<unknown, infer K> ? K : never;
 
+type Expand<T> = T extends (...args: infer A) => infer R
+  ? (...args: Expand<A>) => Expand<R>
+  : T extends object ? { [K in keyof T]: T[K] }
+  : T;
+
 /**
  * Type helper that constructs a TypeScript type from an array of field definitions
  */
-type MapSchemaType<Fields extends FieldDefinition<unknown, string>[]> = {
-  [K in ExtractJsKey<Fields[number]>]: ExtractFieldType<
-    Extract<Fields[number], { jsKey: K }>
-  >;
-};
+type MapSchemaType<Fields extends FieldDefinition<unknown, string>[]> = Expand<
+  {
+    [K in ExtractJsKey<Fields[number]>]: ExtractFieldType<
+      Extract<Fields[number], { jsKey: K }>
+    >;
+  }
+>;
 
 /**
  * Main schema builder class containing all schema constructors and primitive types.
@@ -105,12 +111,12 @@ type MapSchemaType<Fields extends FieldDefinition<unknown, string>[]> = {
  * ]);
  *
  * // Encoding and decoding
- * const encoded = cs.encode(personSchema, {
+ * const encoded = cs.toCBOR(personSchema, {
  *   name: "Alice",
  *   age: 30,
  *   hobbies: ["reading", "hiking"]
  * });
- * const decoded = cs.decode(personSchema, encoded);
+ * const decoded = cs.fromCBOR(personSchema, encoded);
  * ```
  */
 export class CBORSchema {
@@ -120,18 +126,21 @@ export class CBORSchema {
    * @example
    * ```typescript
    * const schema = cs.string;
-   * const encoded = cs.encode(schema, "hello");
-   * const decoded = cs.decode(schema, encoded); // "hello"
+   * const encoded = cs.toCBOR(schema, "hello");
+   * const decoded = cs.fromCBOR(schema, encoded); // "hello"
    * ```
    */
   static string: CBORSchemaType<string> = {
-    decode(data: CBORType): string {
+    fromCBORType(data: CBORType): string {
       if (typeof data !== "string") {
         throw new Error(`Expected string, got ${typeof data}`);
       }
       return data;
     },
-    encode(value: string): CBORType {
+    toCBORType(value: string): CBORType {
+      if (typeof value !== "string") {
+        throw new Error(`Expected string, got ${typeof value}`);
+      }
       return value;
     },
   };
@@ -142,18 +151,21 @@ export class CBORSchema {
    * @example
    * ```typescript
    * const schema = cs.boolean;
-   * const encoded = cs.encode(schema, true);
-   * const decoded = cs.decode(schema, encoded); // true
+   * const encoded = cs.toCBOR(schema, true);
+   * const decoded = cs.fromCBOR(schema, encoded); // true
    * ```
    */
   static boolean: CBORSchemaType<boolean> = {
-    decode(data: CBORType): boolean {
+    fromCBORType(data: CBORType): boolean {
       if (typeof data !== "boolean") {
         throw new Error(`Expected boolean, got ${typeof data}`);
       }
       return data;
     },
-    encode(value: boolean): CBORType {
+    toCBORType(value: boolean): CBORType {
+      if (typeof value !== "boolean") {
+        throw new Error(`Expected boolean, got ${typeof value}`);
+      }
       return value;
     },
   };
@@ -164,18 +176,21 @@ export class CBORSchema {
    * @example
    * ```typescript
    * const schema = cs.float;
-   * const encoded = cs.encode(schema, 3.14);
-   * const decoded = cs.decode(schema, encoded); // 3.14
+   * const encoded = cs.toCBOR(schema, 3.14);
+   * const decoded = cs.fromCBOR(schema, encoded); // 3.14
    * ```
    */
   static float: CBORSchemaType<number> = {
-    decode(data: CBORType): number {
+    fromCBORType(data: CBORType): number {
       if (typeof data !== "number") {
         throw new Error(`Expected number, got ${typeof data}`);
       }
       return data;
     },
-    encode(value: number): CBORType {
+    toCBORType(value: number): CBORType {
+      if (typeof value !== "number") {
+        throw new Error(`Expected number, got ${typeof value}`);
+      }
       return value;
     },
   };
@@ -186,18 +201,18 @@ export class CBORSchema {
    * @example
    * ```typescript
    * const schema = cs.integer;
-   * const encoded = cs.encode(schema, 42);
-   * const decoded = cs.decode(schema, encoded); // 42
+   * const encoded = cs.toCBOR(schema, 42);
+   * const decoded = cs.fromCBOR(schema, encoded); // 42
    * ```
    */
   static integer: CBORSchemaType<number> = {
-    decode(data: CBORType): number {
+    fromCBORType(data: CBORType): number {
       if (typeof data !== "number" || !Number.isInteger(data)) {
-        throw new Error(`Expected uint8, got ${data}`);
+        throw new Error(`Expected integer, got ${data}`);
       }
       return data;
     },
-    encode(value: number): CBORType {
+    toCBORType(value: number): CBORType {
       if (!Number.isInteger(value)) {
         throw new Error(`Value ${value} is not a valid integer`);
       }
@@ -212,18 +227,21 @@ export class CBORSchema {
    * ```typescript
    * const schema = cs.bytes;
    * const data = new Uint8Array([1, 2, 3]);
-   * const encoded = cs.encode(schema, data);
-   * const decoded = cs.decode(schema, encoded); // Uint8Array [1, 2, 3]
+   * const encoded = cs.toCBOR(schema, data);
+   * const decoded = cs.fromCBOR(schema, encoded); // Uint8Array [1, 2, 3]
    * ```
    */
   static bytes: CBORSchemaType<Uint8Array> = {
-    decode(data: CBORType): Uint8Array {
+    fromCBORType(data: CBORType): Uint8Array {
       if (!(data instanceof Uint8Array)) {
         throw new Error(`Expected Uint8Array, got ${typeof data}`);
       }
       return data;
     },
-    encode(value: Uint8Array): CBORType {
+    toCBORType(value: Uint8Array): CBORType {
+      if (!(value instanceof Uint8Array)) {
+        throw new Error(`Expected Uint8Array, got ${typeof value}`);
+      }
       return value;
     },
   };
@@ -237,39 +255,49 @@ export class CBORSchema {
    * @example
    * ```typescript
    * const numberArraySchema = cs.array(cs.float);
-   * const encoded = cs.encode(numberArraySchema, [1, 2, 3]);
-   * const decoded = cs.decode(numberArraySchema, encoded); // [1, 2, 3]
+   * const encoded = cs.toCBOR(numberArraySchema, [1, 2, 3]);
+   * const decoded = cs.fromCBOR(numberArraySchema, encoded); // [1, 2, 3]
    * ```
    */
   static array<T>(itemSchema: CBORSchemaType<T>): CBORSchemaType<T[]> {
     return {
-      decode(data: CBORType): T[] {
+      fromCBORType(data: CBORType): T[] {
         if (!Array.isArray(data)) {
           throw new Error(`Expected array, got ${typeof data}`);
         }
 
         return data.map((item, index) => {
           try {
-            return itemSchema.decode(item);
+            return itemSchema.fromCBORType(item);
           } catch (error) {
+            if (error instanceof Error) {
+              throw new Error(
+                `Error decoding array item at index ${index}: ${error.message}`,
+              );
+            }
+            // deno-coverage-ignore-start
             throw new Error(
-              `Error decoding array item at index ${index}: ${
-                error instanceof Error ? error.message : String(error)
-              }`,
+              `Error decoding array item at index ${index}: ${error}`,
             );
+            // deno-coverage-ignore-end
           }
         });
       },
-      encode(value: T[]): CBORType {
+      toCBORType(value: T[]): CBORType {
         return value.map((item, index) => {
           try {
-            return itemSchema.encode(item);
+            return itemSchema.toCBORType(item);
           } catch (error) {
+            if (error instanceof Error) {
+              throw new Error(
+                `Error encoding array item at index ${index}: ${error.message}`,
+              );
+            }
+            // deno-coverage-ignore-start
             throw new Error(
-              `Error encoding array item at index ${index}: ${
-                error instanceof Error ? error.message : String(error)
-              }`,
+              `Error encoding array item at index ${index}: ${error}`,
             );
+            // deno-coverage-ignore-end
           }
         });
       },
@@ -288,25 +316,15 @@ export class CBORSchema {
    *   cs.float, // x coordinate
    *   cs.float  // y coordinate
    * ]);
-   * const encoded = cs.encode(pointSchema, [10.5, 20.7]);
-   * const decoded = cs.decode(pointSchema, encoded); // [10.5, 20.7]
+   * const encoded = cs.toCBOR(pointSchema, [10.5, 20.7]);
+   * const decoded = cs.fromCBOR(pointSchema, encoded); // [10.5, 20.7]
    * ```
    */
-  static tuple<Schemas extends CBORSchemaType<unknown>[]>(
-    schemas: Schemas,
-  ): CBORSchemaType<
-    {
-      [K in keyof Schemas]: Schemas[K] extends CBORSchemaType<infer T> ? T
-        : never;
-    }
-  > {
+  static tuple<T extends unknown[]>(
+    schemas: { [K in keyof T]: CBORSchemaType<T[K]> },
+  ): CBORSchemaType<T> {
     return {
-      decode(
-        data: CBORType,
-      ): {
-        [K in keyof Schemas]: Schemas[K] extends CBORSchemaType<infer T> ? T
-          : never;
-      } {
+      fromCBORType(data: CBORType): T {
         if (!Array.isArray(data)) {
           throw new Error(`Expected array for tuple, got ${typeof data}`);
         }
@@ -317,40 +335,49 @@ export class CBORSchema {
           );
         }
 
-        return schemas.map((schema, index) => {
+        // Create a tuple with the correct types
+        const result = [] as unknown as T;
+
+        for (let i = 0; i < schemas.length; i++) {
           try {
-            return schema.decode(data[index]);
-          } catch (error) {
-            throw new Error(
-              `Error decoding tuple item at index ${index}: ${
-                error instanceof Error ? error.message : String(error)
-              }`,
+            (result as Record<string, unknown>)[i] = schemas[i].fromCBORType(
+              data[i],
             );
+          } catch (error) {
+            if (error instanceof Error) {
+              throw new Error(
+                `Error decoding tuple item at index ${i}: ${error.message}`,
+              );
+            }
+            // deno-coverage-ignore-start
+            throw new Error(
+              `Error decoding tuple item at index ${i}: ${error}`,
+            );
+            // deno-coverage-ignore-end
           }
-        }) as {
-          [K in keyof Schemas]: Schemas[K] extends CBORSchemaType<infer T> ? T
-            : never;
-        };
+        }
+
+        return result;
       },
-      encode(
-        value: {
-          [K in keyof Schemas]: Schemas[K] extends CBORSchemaType<infer T> ? T
-            : never;
-        },
-      ): CBORType {
+      toCBORType(value: T): CBORType {
         if (!Array.isArray(value) || value.length !== schemas.length) {
           throw new Error(`Expected tuple of length ${schemas.length}`);
         }
 
         return schemas.map((schema, index) => {
           try {
-            return schema.encode(value[index]);
+            return schema.toCBORType(value[index]);
           } catch (error) {
+            if (error instanceof Error) {
+              throw new Error(
+                `Error encoding tuple item at index ${index}: ${error.message}`,
+              );
+            }
+            // deno-coverage-ignore-start
             throw new Error(
-              `Error encoding tuple item at index ${index}: ${
-                error instanceof Error ? error.message : String(error)
-              }`,
+              `Error encoding tuple item at index ${index}: ${error}`,
             );
+            // deno-coverage-ignore-end
           }
         });
       },
@@ -369,10 +396,10 @@ export class CBORSchema {
    *   cs.float,
    *   cs.string
    * ]);
-   * const encoded1 = cs.encode(numberOrStringSchema, 42);
-   * const encoded2 = cs.encode(numberOrStringSchema, "hello");
-   * const decoded1 = cs.decode(numberOrStringSchema, encoded1); // 42
-   * const decoded2 = cs.decode(numberOrStringSchema, encoded2); // "hello"
+   * const encoded1 = cs.toCBOR(numberOrStringSchema, 42);
+   * const encoded2 = cs.toCBOR(numberOrStringSchema, "hello");
+   * const decoded1 = cs.fromCBOR(numberOrStringSchema, encoded1); // 42
+   * const decoded2 = cs.fromCBOR(numberOrStringSchema, encoded2); // "hello"
    * ```
    */
   static union<Schemas extends CBORSchemaType<unknown>[]>(
@@ -381,44 +408,50 @@ export class CBORSchema {
     Schemas[number] extends CBORSchemaType<infer T> ? T : never
   > {
     return {
-      decode(
+      fromCBORType(
         data: CBORType,
       ): Schemas[number] extends CBORSchemaType<infer T> ? T : never {
         for (let i = 0; i < schemas.length; i++) {
           try {
-            return schemas[i].decode(data) as Schemas[number] extends
+            return schemas[i].fromCBORType(data) as Schemas[number] extends
               CBORSchemaType<infer T> ? T : never;
           } catch (error) {
             if (i === schemas.length - 1) {
+              if (error instanceof Error) {
+                throw new Error(
+                  `Value doesn't match any schema in union: ${error.message}`,
+                );
+              }
               throw new Error(
-                `Value doesn't match any schema in union: ${
-                  error instanceof Error ? error.message : String(error)
-                }`,
+                `Value doesn't match any schema in union: ${error}`,
               );
             }
           }
         }
         throw new Error("Failed to decode union value");
       },
-      encode(
+      toCBORType(
         value: Schemas[number] extends CBORSchemaType<infer T> ? T : never,
       ): CBORType {
         for (let i = 0; i < schemas.length; i++) {
           try {
-            return schemas[i].encode(value as CBORType);
+            return schemas[i].toCBORType(value as CBORType);
           } catch (error) {
             if (i === schemas.length - 1) {
+              if (error instanceof Error) {
+                throw new Error(
+                  `Value doesn't match any schema in union for encoding: ${error.message}`,
+                );
+              }
               throw new Error(
-                `Value doesn't match any schema in union for encoding: ${
-                  error instanceof Error ? error.message : String(error)
-                }`,
+                `Value doesn't match any schema in union for encoding: ${error}`,
               );
             }
           }
         }
         throw new Error("Failed to encode union value");
-      },
-    };
+      }
+    }
   }
 
   /**
@@ -434,8 +467,8 @@ export class CBORSchema {
    *   0, // Standard datetime tag
    *   cs.string
    * );
-   * const encoded = cs.encode(dateSchema, new Date().toISOString());
-   * const decoded = cs.decode(dateSchema, encoded);
+   * const encoded = cs.toCBOR(dateSchema, new Date().toISOString());
+   * const decoded = cs.fromCBOR(dateSchema, encoded);
    * ```
    */
   static tagged<T>(
@@ -443,7 +476,7 @@ export class CBORSchema {
     valueSchema: CBORSchemaType<T>,
   ): CBORSchemaType<T> {
     return {
-      decode(data: CBORType): T {
+      fromCBORType(data: CBORType): T {
         if (!(data instanceof CBORTag)) {
           throw new Error(`Expected CBORTag, got ${typeof data}`);
         }
@@ -452,10 +485,10 @@ export class CBORSchema {
           throw new Error(`Expected tag ${tagNumber}, got ${data.tag}`);
         }
 
-        return valueSchema.decode(data.value);
+        return valueSchema.fromCBORType(data.value);
       },
-      encode(value: T): CBORType {
-        const encodedValue = valueSchema.encode(value);
+      toCBORType(value: T): CBORType {
+        const encodedValue = valueSchema.toCBORType(value);
         return new CBORTag(tagNumber, encodedValue);
       },
     };
@@ -470,26 +503,27 @@ export class CBORSchema {
    * @example
    * ```typescript
    * const optionalNumberSchema = cs.optional(cs.float);
-   * const encoded1 = cs.encode(optionalNumberSchema, 42);
-   * const encoded2 = cs.encode(optionalNumberSchema, undefined);
-   * const decoded1 = cs.decode(optionalNumberSchema, encoded1); // 42
-   * const decoded2 = cs.decode(optionalNumberSchema, encoded2); // undefined
+   * const encoded1 = cs.toCBOR(optionalNumberSchema, 42);
+   * const encoded2 = cs.toCBOR(optionalNumberSchema, undefined);
+   * const decoded1 = cs.fromCBOR(optionalNumberSchema, encoded1); // 42
+   * const decoded2 = cs.fromCBOR(optionalNumberSchema, encoded2); // undefined
    * ```
    */
   static optional<T>(schema: CBORSchemaType<T>): CBORSchemaType<T | undefined> {
     return {
-      decode(data: CBORType): T | undefined {
+      fromCBORType(data: CBORType): T | undefined {
         if (data === undefined || data === null) {
           return undefined;
         }
-        return schema.decode(data);
+        return schema.fromCBORType(data);
       },
-      encode(value: T | undefined): CBORType {
+      toCBORType(value: T | undefined): CBORType {
         if (value === undefined) {
           return undefined;
         }
-        return schema.encode(value);
+        return schema.toCBORType(value);
       },
+      isOptional: true,
     };
   }
 
@@ -565,15 +599,15 @@ export class CBORSchema {
    *   email: "alice@example.com"
    * };
    *
-   * const encoded = cs.encode(personSchema, person);
-   * const decoded = cs.decode(personSchema, encoded);
+   * const encoded = cs.toCBOR(personSchema, person);
+   * const decoded = cs.fromCBOR(personSchema, encoded);
    * ```
    */
   static map<Fields extends FieldDefinition<unknown, string>[]>(
     fields: Fields,
   ): CBORSchemaType<MapSchemaType<Fields>> {
     return {
-      decode(data: CBORType): MapSchemaType<Fields> {
+      fromCBORType(data: CBORType): MapSchemaType<Fields> {
         if (!(data instanceof Map)) {
           throw new Error(`Expected Map, got ${typeof data}`);
         }
@@ -582,42 +616,43 @@ export class CBORSchema {
 
         for (const field of fields) {
           const value = data.get(field.key);
-          const isOptional = isOptionalSchema(field.schema);
 
-          if (value === undefined && !isOptional) {
+          if (value === undefined && !field.schema.isOptional) {
             throw new Error(`Missing required field: ${field.key}`);
           }
 
           try {
             (result as Record<string, unknown>)[field.jsKey] = field.schema
-              .decode(value);
+              .fromCBORType(value);
           } catch (error) {
-            throw new Error(
-              `Error decoding field ${field.jsKey}: ${
-                error instanceof Error ? error.message : String(error)
-              }`,
-            );
+            if (error instanceof Error) {
+              throw new Error(
+                `Error decoding field ${field.jsKey}: ${error.message}`,
+              );
+            }
+            // deno-coverage-ignore-start
+            throw new Error(`Error decoding field ${field.jsKey}: ${error}`);
+            // deno-coverage-ignore-end
           }
         }
 
         return result;
       },
-      encode(value: MapSchemaType<Fields>): CBORType {
+      toCBORType(value: MapSchemaType<Fields>): CBORType {
         const map = new Map<string | number, CBORType>();
 
         for (const field of fields) {
           const fieldValue = value[field.jsKey as keyof typeof value];
-          const isOptional = isOptionalSchema(field.schema);
 
           if (fieldValue === undefined) {
-            if (!isOptional) {
+            if (!field.schema.isOptional) {
               throw new Error(`Missing required field: ${field.jsKey}`);
             }
             continue;
           }
 
           try {
-            const encoded = field.schema.encode(
+            const encoded = field.schema.toCBORType(
               fieldValue as ExtractFieldType<typeof field>,
             );
             if (encoded !== undefined) {
@@ -659,13 +694,13 @@ export class CBORSchema {
    *   metadata: { version: 1 }
    * };
    *
-   * const encoded = cs.encode(documentSchema, doc);
-   * const decoded = cs.decode(documentSchema, encoded);
+   * const encoded = cs.toCBOR(documentSchema, doc);
+   * const decoded = cs.fromCBOR(documentSchema, encoded);
    * ```
    */
   static nested<T>(innerSchema: CBORSchemaType<T>): CBORSchemaType<T> {
     return {
-      decode(data: CBORType): T {
+      fromCBORType(data: CBORType): T {
         if (!(data instanceof Uint8Array)) {
           throw new Error(
             `Expected Uint8Array for nested CBOR, got ${typeof data}`,
@@ -674,7 +709,7 @@ export class CBORSchema {
 
         try {
           const innerData = decodeCBOR(data);
-          return innerSchema.decode(innerData);
+          return innerSchema.fromCBORType(innerData);
         } catch (error) {
           throw new Error(
             `Error decoding nested CBOR: ${
@@ -683,9 +718,9 @@ export class CBORSchema {
           );
         }
       },
-      encode(value: T): CBORType {
+      toCBORType(value: T): CBORType {
         try {
-          const innerEncoded = innerSchema.encode(value);
+          const innerEncoded = innerSchema.toCBORType(value);
           return encodeCBOR(innerEncoded);
         } catch (error) {
           throw new Error(
@@ -708,16 +743,16 @@ export class CBORSchema {
    *
    * @example
    * ```typescript
-   * const data = new Uint8Array([...]);  // CBOR encoded data
-   * const value = cs.decode(cs.string, data);
+   * const data = new Uint8Array([101, 72, 101, 108, 108, 111]);  // "Hello" in CBOR
+   * const value = cs.fromCBOR(cs.string, data);
    * ```
    */
-  static decode<T>(
+  static fromCBOR<T>(
     schema: CBORSchemaType<T>,
     data: Uint8Array | ArrayBuffer | ArrayBufferLike | DataView,
   ): T {
     const decoded = decodeCBOR(data);
-    return schema.decode(decoded);
+    return schema.fromCBORType(decoded);
   }
 
   /**
@@ -731,11 +766,11 @@ export class CBORSchema {
    * @example
    * ```typescript
    * const schema = cs.string;
-   * const encoded = cs.encode(schema, "Hello, CBOR!");
+   * const encoded = cs.toCBOR(schema, "Hello, CBOR!");
    * ```
    */
-  static encode<T>(schema: CBORSchemaType<T>, value: T): Uint8Array {
-    const encoded = schema.encode(value);
+  static toCBOR<T>(schema: CBORSchemaType<T>, value: T): Uint8Array {
+    const encoded = schema.toCBORType(value);
     return encodeCBOR(encoded);
   }
 }
@@ -758,12 +793,12 @@ export class CBORSchema {
  * ]);
  *
  * // Encoding and decoding
- * const encoded = cs.encode(personSchema, {
+ * const encoded = cs.toCBOR(personSchema, {
  *   name: "Alice",
  *   age: 30,
  *   hobbies: ["reading", "hiking"]
  * });
- * const decoded = cs.decode(personSchema, encoded);
+ * const decoded = cs.fromCBOR(personSchema, encoded);
  * ```
  */
 export const cs = CBORSchema;
