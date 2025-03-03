@@ -5,3 +5,4 @@ dist
 ignored
 html_cov
 cod.lcov
+*.lcov
