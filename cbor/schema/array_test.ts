@@ -80,3 +80,53 @@ Deno.test("Test array schema element-specific exceptions - fromCBORType", () => 
     "Error decoding array item at index 1",
   );
 });
+
+// Test array schema with non-Error throws
+Deno.test("Test array schema with non-Error throws", () => {
+  // Create a schema that throws a string instead of an Error
+  const stringThrowSchema: CBORSchemaType<string> = {
+    fromCBORType(data: CBORType): string {
+      if (data === "throw-string") {
+        throw "This is a string error";
+      }
+      if (typeof data !== "string") {
+        throw new Error("Expected string");
+      }
+      return data;
+    },
+    toCBORType(value: string): CBORType {
+      return value;
+    },
+  };
+
+  const arraySchema = array(stringThrowSchema);
+
+  // Test with array containing an element that triggers a string throw
+  assertThrows(
+    () => arraySchema.fromCBORType(["ok", "throw-string", "good"]),
+    Error,
+    "Error decoding array item at index 1: This is a string error",
+  );
+
+  // Test throwing a non-Error object in toCBORType
+  const objectThrowSchema: CBORSchemaType<string> = {
+    fromCBORType(data: CBORType): string {
+      return String(data);
+    },
+    toCBORType(value: string): CBORType {
+      if (value === "throw-object") {
+        throw { message: "Custom object error" };
+      }
+      return value;
+    },
+  };
+
+  const arraySchema2 = array(objectThrowSchema);
+
+  // Test with array containing an element that triggers an object throw in toCBORType
+  assertThrows(
+    () => arraySchema2.toCBORType(["ok", "throw-object", "good"]),
+    Error,
+    "Error encoding array item at index 1: [object Object]",
+  );
+});

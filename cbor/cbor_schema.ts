@@ -11,10 +11,7 @@ import { tagged } from "./schema/tagged.ts";
 import { optional } from "./schema/optional.ts";
 import { field, map, numberField } from "./schema/map.ts";
 import { nested } from "./schema/nested.ts";
-import type {
-  CBORSchemaType,
-  FieldDefinition,
-} from "./schema/type.ts";
+import type { CBORSchemaType, FieldDefinition } from "./schema/type.ts";
 
 /**
  * Main schema builder class containing all schema constructors and primitive types.

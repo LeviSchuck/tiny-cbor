@@ -5,6 +5,7 @@ import { string } from "./string.ts";
 import { assertEquals } from "jsr:@std/assert";
 import { integer } from "./integer.ts";
 import { boolean } from "./boolean.ts";
+import type { CBORSchemaType } from "./type.ts";
 
 // Type validation tests
 Deno.test("Tuple types with invalid inputs - fromCBORType", () => {
@@ -92,4 +93,105 @@ Deno.test("Test tuple schema", () => {
   const tsCheckOnly: AssertEqual<[string, number, boolean], typeof decoded> =
     decoded;
   assertEquals(tsCheckOnly, testTuple);
+});
+
+// Create custom schemas that throw errors for testing
+const errorThrowingSchema = {
+  fromCBORType: (_: unknown): never => {
+    throw new Error("Custom error from schema");
+  },
+  toCBORType: (_: unknown): never => {
+    throw new Error("Custom error during encoding");
+  },
+};
+
+const nonErrorThrowingSchema = {
+  fromCBORType: (_: unknown): never => {
+    throw "String error message";
+  },
+  toCBORType: (_: unknown): never => {
+    throw "String error during encoding";
+  },
+};
+
+Deno.test("Tuple schema with child schema throwing Error object - fromCBORType", () => {
+  // Type assertion to make TypeScript happy
+  const errorSchema = tuple([
+    string,
+    errorThrowingSchema as unknown as CBORSchemaType<unknown>,
+  ]);
+
+  assertThrows(
+    () => errorSchema.fromCBORType(["test", "value"]),
+    Error,
+    "Error decoding tuple item at index 1: Custom error from schema",
+  );
+});
+
+Deno.test("Tuple schema with child schema throwing non-Error object - fromCBORType", () => {
+  const nonErrorSchema = tuple([
+    string,
+    nonErrorThrowingSchema as unknown as CBORSchemaType<unknown>,
+  ]);
+
+  assertThrows(
+    () => nonErrorSchema.fromCBORType(["test", "value"]),
+    Error,
+    "Error decoding tuple item at index 1: String error message",
+  );
+});
+
+Deno.test("Tuple schema with child schema throwing Error object - toCBORType", () => {
+  const errorSchema = tuple([
+    string,
+    errorThrowingSchema as unknown as CBORSchemaType<unknown>,
+  ]);
+
+  assertThrows(
+    () => errorSchema.toCBORType(["test", "value"] as [string, unknown]),
+    Error,
+    "Error encoding tuple item at index 1: Custom error during encoding",
+  );
+});
+
+Deno.test("Tuple schema with child schema throwing non-Error object - toCBORType", () => {
+  const nonErrorSchema = tuple([
+    string,
+    nonErrorThrowingSchema as unknown as CBORSchemaType<unknown>,
+  ]);
+
+  assertThrows(
+    () => nonErrorSchema.toCBORType(["test", "value"] as [string, unknown]),
+    Error,
+    "Error encoding tuple item at index 1: String error during encoding",
+  );
+});
+
+Deno.test("Tuple schema with multiple error-throwing schemas - fromCBORType", () => {
+  // The first error should be thrown
+  const multiErrorSchema = tuple([
+    errorThrowingSchema as unknown as CBORSchemaType<unknown>,
+    nonErrorThrowingSchema as unknown as CBORSchemaType<unknown>,
+  ]);
+
+  assertThrows(
+    () => multiErrorSchema.fromCBORType(["value1", "value2"]),
+    Error,
+    "Error decoding tuple item at index 0: Custom error from schema",
+  );
+});
+
+Deno.test("Tuple schema with multiple error-throwing schemas - toCBORType", () => {
+  // The first error should be thrown
+  const multiErrorSchema = tuple([
+    errorThrowingSchema as unknown as CBORSchemaType<unknown>,
+    nonErrorThrowingSchema as unknown as CBORSchemaType<unknown>,
+  ]);
+
+  assertThrows(
+    () =>
+      multiErrorSchema.toCBORType(["value1", "value2"] as [unknown, unknown]),
+    Error,
+    "Error encoding tuple item at index 0: Custom error during encoding",
+  );
 });

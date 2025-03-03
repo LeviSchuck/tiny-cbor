@@ -6,6 +6,8 @@ import { integer } from "./integer.ts";
 import { optional } from "./optional.ts";
 import { assertEquals } from "jsr:@std/assert";
 import type { ExtractFieldType } from "./type.ts";
+import type { CBORType } from "../cbor.ts";
+import type { CBORSchemaType } from "./type.ts";
 
 // Type validation tests
 Deno.test("Map types with invalid inputs - fromCBORType", () => {
@@ -132,4 +134,82 @@ Deno.test("Map types with valid inputs", () => {
 
   const encodedScores = scoreSchema.toCBORType(scores);
   assertEquals(scoreSchema.fromCBORType(encodedScores), scores);
+});
+
+// Test map schema with non-Error throws
+Deno.test("Test map schema with non-Error throws", () => {
+  // Create a schema that throws non-Error objects
+  const nonErrorSchema: CBORSchemaType<string> = {
+    fromCBORType(data: CBORType): string {
+      if (data === "throw-string") {
+        throw "String error in fromCBORType";
+      }
+      if (data === "throw-object") {
+        throw { reason: "Custom object error in fromCBORType" };
+      }
+      return String(data);
+    },
+    toCBORType(value: string): CBORType {
+      if (value === "throw-string-encode") {
+        throw "String error in toCBORType";
+      }
+      if (value === "throw-object-encode") {
+        throw { reason: "Custom object error in toCBORType" };
+      }
+      return value;
+    },
+  };
+
+  const mapSchema = map([
+    field("field1", nonErrorSchema),
+    field("field2", string),
+  ]);
+
+  // Test string throw in fromCBORType
+  assertThrows(
+    () =>
+      mapSchema.fromCBORType(
+        new Map([
+          ["field1", "throw-string"],
+          ["field2", "ok"],
+        ]),
+      ),
+    Error,
+    "Error decoding field field1: String error in fromCBORType",
+  );
+
+  // Test object throw in fromCBORType
+  assertThrows(
+    () =>
+      mapSchema.fromCBORType(
+        new Map([
+          ["field1", "throw-object"],
+          ["field2", "ok"],
+        ]),
+      ),
+    Error,
+    "Error decoding field field1: [object Object]",
+  );
+
+  // Test string throw in toCBORType
+  assertThrows(
+    () =>
+      mapSchema.toCBORType({
+        field1: "throw-string-encode",
+        field2: "ok",
+      } as ExtractFieldType<typeof mapSchema>),
+    Error,
+    "Error encoding field field1: String error in toCBORType",
+  );
+
+  // Test object throw in toCBORType
+  assertThrows(
+    () =>
+      mapSchema.toCBORType({
+        field1: "throw-object-encode",
+        field2: "ok",
+      } as ExtractFieldType<typeof mapSchema>),
+    Error,
+    "Error encoding field field1: [object Object]",
+  );
 });
