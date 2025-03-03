@@ -424,7 +424,7 @@ export function decodePartialCBOR(
 
   const prototype = Object.getPrototypeOf(data);
 
-  const isArrayBuffer = prototype === ArrayBuffer.prototype
+  const isArrayBuffer = prototype === ArrayBuffer.prototype;
   const isSharedArrayBuffer = prototype === SharedArrayBuffer.prototype;
 
   if (prototype.constructor === Uint8Array.prototype.constructor) {

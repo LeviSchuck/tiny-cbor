@@ -1,6 +1,6 @@
 import { assertEquals, assertThrows } from "jsr:@std/assert";
 import { cs } from "./cbor_schema.ts";
-import { decodeCBOR, type CBORType, CBORTag } from "./cbor.ts";
+import { CBORTag, type CBORType, decodeCBOR } from "./cbor.ts";
 import type { CBORSchemaType } from "./cbor_schema.ts";
 
 // Basic object test
@@ -76,91 +76,91 @@ Deno.test("Test type validation - primitive types toCBORType", () => {
     Error,
     "Expected string",
   );
-  
+
   // String schema should reject objects
   assertThrows(
     () => cs.string.toCBORType({} as unknown as string),
     Error,
     "Expected string",
   );
-  
+
   // String schema should reject arrays
   assertThrows(
     () => cs.string.toCBORType([] as unknown as string),
     Error,
     "Expected string",
   );
-  
+
   // String schema should reject booleans
   assertThrows(
     () => cs.string.toCBORType(true as unknown as string),
     Error,
     "Expected string",
   );
-  
+
   // Integer schema should reject strings
   assertThrows(
     () => cs.integer.toCBORType("42" as unknown as number),
     Error,
     "Value 42 is not a valid integer",
   );
-  
+
   // Integer schema should reject floats
   assertThrows(
     () => cs.integer.toCBORType(42.5),
     Error,
     "Value 42.5 is not a valid integer",
   );
-  
+
   // Integer schema should reject objects
   assertThrows(
     () => cs.integer.toCBORType({} as unknown as number),
     Error,
     "not a valid integer",
   );
-  
+
   // Float schema should reject strings
   assertThrows(
     () => cs.float.toCBORType("3.14" as unknown as number),
     Error,
     "Expected number",
   );
-  
+
   // Float schema should reject objects
   assertThrows(
     () => cs.float.toCBORType({} as unknown as number),
     Error,
     "Expected number",
   );
-  
+
   // Boolean schema should reject strings
   assertThrows(
     () => cs.boolean.toCBORType("true" as unknown as boolean),
     Error,
     "Expected boolean",
   );
-  
+
   // Boolean schema should reject numbers
   assertThrows(
     () => cs.boolean.toCBORType(1 as unknown as boolean),
     Error,
     "Expected boolean",
   );
-  
+
   // Bytes schema should reject strings
   assertThrows(
     () => cs.bytes.toCBORType("bytes" as unknown as Uint8Array),
     Error,
     "Expected Uint8Array",
   );
-  
+
   // Bytes schema should reject regular arrays
   assertThrows(
     () => cs.bytes.toCBORType([1, 2, 3] as unknown as Uint8Array),
     Error,
     "Expected Uint8Array",
   );
-  
+
   // Bytes schema should reject objects
   assertThrows(
     () => cs.bytes.toCBORType({} as unknown as Uint8Array),
@@ -174,19 +174,19 @@ Deno.test("Test primitive types with valid inputs - toCBORType", () => {
   // Test string
   const stringValue = "test string";
   assertEquals(cs.string.toCBORType(stringValue), stringValue);
-  
+
   // Test integer
   const intValue = 42;
   assertEquals(cs.integer.toCBORType(intValue), intValue);
-  
+
   // Test float
   const floatValue = 3.14;
   assertEquals(cs.float.toCBORType(floatValue), floatValue);
-  
+
   // Test boolean
   const boolValue = true;
   assertEquals(cs.boolean.toCBORType(boolValue), boolValue);
-  
+
   // Test bytes
   const bytesValue = new Uint8Array([1, 2, 3, 4, 5]);
   assertEquals(cs.bytes.toCBORType(bytesValue), bytesValue);
@@ -238,66 +238,93 @@ Deno.test("Test type validation - tuple schema", () => {
 // Test tuple schema toCBORType validation
 Deno.test("Test type validation - tuple schema toCBORType", () => {
   const personTupleSchema = cs.tuple([cs.string, cs.integer, cs.boolean]);
-  
+
   // Should reject non-array
   assertThrows(
-    () => personTupleSchema.toCBORType("not a tuple" as unknown as [string, number, boolean]),
+    () =>
+      personTupleSchema.toCBORType(
+        "not a tuple" as unknown as [string, number, boolean],
+      ),
     Error,
     "Expected tuple of length 3",
   );
-  
+
   // Should reject tuple with wrong length (too short)
   assertThrows(
-    () => personTupleSchema.toCBORType(["John", 30] as unknown as [string, number, boolean]),
+    () =>
+      personTupleSchema.toCBORType(
+        ["John", 30] as unknown as [string, number, boolean],
+      ),
     Error,
     "Expected tuple of length 3",
   );
-  
+
   // Should reject tuple with wrong length (too long)
   assertThrows(
-    () => personTupleSchema.toCBORType(["John", 30, true, "extra"] as unknown as [string, number, boolean]),
+    () =>
+      personTupleSchema.toCBORType(
+        ["John", 30, true, "extra"] as unknown as [string, number, boolean],
+      ),
     Error,
     "Expected tuple of length 3",
   );
-  
+
   // Should reject tuple with wrong types at index 0
   assertThrows(
-    () => personTupleSchema.toCBORType([42, 30, true] as unknown as [string, number, boolean]),
+    () =>
+      personTupleSchema.toCBORType(
+        [42, 30, true] as unknown as [string, number, boolean],
+      ),
     Error,
     "Error encoding tuple item at index 0",
   );
-  
+
   // Should reject tuple with wrong types at index 1
   assertThrows(
-    () => personTupleSchema.toCBORType(["John", "30", true] as unknown as [string, number, boolean]),
+    () =>
+      personTupleSchema.toCBORType(
+        ["John", "30", true] as unknown as [string, number, boolean],
+      ),
     Error,
     "Error encoding tuple item at index 1",
   );
-  
+
   // Should reject tuple with wrong types at index 2
   assertThrows(
-    () => personTupleSchema.toCBORType(["John", 30, "true"] as unknown as [string, number, boolean]),
+    () =>
+      personTupleSchema.toCBORType(
+        ["John", 30, "true"] as unknown as [string, number, boolean],
+      ),
     Error,
     "Error encoding tuple item at index 2",
   );
-  
+
   // Should reject tuple with multiple wrong types
   assertThrows(
-    () => personTupleSchema.toCBORType([42, "30", "true"] as unknown as [string, number, boolean]),
+    () =>
+      personTupleSchema.toCBORType(
+        [42, "30", "true"] as unknown as [string, number, boolean],
+      ),
     Error,
     "Error encoding tuple item at index 0",
   );
-  
+
   // Should reject tuple with null values
   assertThrows(
-    () => personTupleSchema.toCBORType(["John", null, true] as unknown as [string, number, boolean]),
+    () =>
+      personTupleSchema.toCBORType(
+        ["John", null, true] as unknown as [string, number, boolean],
+      ),
     Error,
     "Error encoding tuple item at index 1",
   );
-  
+
   // Should reject tuple with undefined values
   assertThrows(
-    () => personTupleSchema.toCBORType(["John", 30, undefined] as unknown as [string, number, boolean]),
+    () =>
+      personTupleSchema.toCBORType(
+        ["John", 30, undefined] as unknown as [string, number, boolean],
+      ),
     Error,
     "Error encoding tuple item at index 2",
   );
@@ -314,46 +341,49 @@ Deno.test("Test tuple schema toCBORType with complex types", () => {
       cs.field("value", cs.integer),
     ]),
   ]);
-  
+
   // Test with valid complex tuple
   const validTuple = [
     "test",
     [1, 2, 3],
     { name: "item", value: 42 },
   ] as [string, number[], { name: string; value: number }];
-  
+
   // This should not throw
-  const encoded = complexTupleSchema.toCBORType(validTuple);
-  
+  const _encoded = complexTupleSchema.toCBORType(validTuple);
+
   // Test with invalid array element
   assertThrows(
-    () => complexTupleSchema.toCBORType([
-      "test",
-      [1, "2", 3], // Invalid array element
-      { name: "item", value: 42 },
-    ] as unknown as [string, number[], { name: string; value: number }]),
+    () =>
+      complexTupleSchema.toCBORType([
+        "test",
+        [1, "2", 3], // Invalid array element
+        { name: "item", value: 42 },
+      ] as unknown as [string, number[], { name: string; value: number }]),
     Error,
     "Error encoding tuple item at index 1",
   );
-  
+
   // Test with invalid map element
   assertThrows(
-    () => complexTupleSchema.toCBORType([
-      "test",
-      [1, 2, 3],
-      { name: "item", value: "42" }, // Invalid map value
-    ] as unknown as [string, number[], { name: string; value: number }]),
+    () =>
+      complexTupleSchema.toCBORType([
+        "test",
+        [1, 2, 3],
+        { name: "item", value: "42" }, // Invalid map value
+      ] as unknown as [string, number[], { name: string; value: number }]),
     Error,
     "Error encoding tuple item at index 2",
   );
-  
+
   // Test with missing required field in map
   assertThrows(
-    () => complexTupleSchema.toCBORType([
-      "test",
-      [1, 2, 3],
-      { value: 42 }, // Missing 'name' field
-    ] as unknown as [string, number[], { name: string; value: number }]),
+    () =>
+      complexTupleSchema.toCBORType([
+        "test",
+        [1, 2, 3],
+        { value: 42 }, // Missing 'name' field
+      ] as unknown as [string, number[], { name: string; value: number }]),
     Error,
     "Error encoding tuple item at index 2",
   );
@@ -425,21 +455,21 @@ Deno.test("Test bytes schema fromCBORType", () => {
   const validBytes = new Uint8Array([1, 2, 3, 4, 5]);
   const result = cs.bytes.fromCBORType(validBytes);
   assertEquals(result, validBytes);
-  
+
   // Test with non-Uint8Array input (should throw error)
   assertThrows(
     () => cs.bytes.fromCBORType("not a byte array"),
     Error,
     "Expected Uint8Array",
   );
-  
+
   // Test with number input (should throw error)
   assertThrows(
     () => cs.bytes.fromCBORType(42),
     Error,
     "Expected Uint8Array",
   );
-  
+
   // Test with array input (should throw error)
   assertThrows(
     () => cs.bytes.fromCBORType([1, 2, 3]),
@@ -456,44 +486,47 @@ Deno.test("Test array schema fromCBORType exceptions", () => {
     cs.field("value", cs.integer),
   ]);
   const arrayOfObjectsSchema = cs.array(objectSchema);
-  
+
   // Test with non-array input
   assertThrows(
     () => arrayOfObjectsSchema.fromCBORType("not an array"),
     Error,
     "Expected array",
   );
-  
+
   // Test with array containing invalid items (missing required field)
   assertThrows(
-    () => arrayOfObjectsSchema.fromCBORType([
-      new Map<string, any>([["name", "item1"], ["value", 10]]), // valid
-      new Map<string, any>([["value", 20]]), // missing 'name' field
-      new Map<string, any>([["name", "item3"], ["value", 30]]), // valid
-    ]),
+    () =>
+      arrayOfObjectsSchema.fromCBORType([
+        new Map<string, number | string>([["name", "item1"], ["value", 10]]), // valid
+        new Map<string, number | string>([["value", 20]]), // missing 'name' field
+        new Map<string, number | string>([["name", "item3"], ["value", 30]]), // valid
+      ]),
     Error,
     "Error decoding array item at index 1",
   );
-  
+
   // Test with array containing items of wrong type
   assertThrows(
-    () => arrayOfObjectsSchema.fromCBORType([
-      new Map<string, any>([["name", "item1"], ["value", 10]]), // valid
-      new Map<string, any>([["name", "item2"], ["value", "20"]]), // value should be integer
-      new Map<string, any>([["name", "item3"], ["value", 30]]), // valid
-    ]),
+    () =>
+      arrayOfObjectsSchema.fromCBORType([
+        new Map<string, number | string>([["name", "item1"], ["value", 10]]), // valid
+        new Map<string, number | string>([["name", "item2"], ["value", "20"]]), // value should be integer
+        new Map<string, number | string>([["name", "item3"], ["value", 30]]), // valid
+      ]),
     Error,
     "Error decoding array item at index 1",
   );
-  
+
   // Test with nested array errors (deeper error propagation)
   const nestedArraySchema = cs.array(cs.array(cs.integer));
   assertThrows(
-    () => nestedArraySchema.fromCBORType([
-      [1, 2, 3], // valid
-      [4, "5", 6], // invalid - contains string instead of integer
-      [7, 8, 9], // valid
-    ]),
+    () =>
+      nestedArraySchema.fromCBORType([
+        [1, 2, 3], // valid
+        [4, "5", 6], // invalid - contains string instead of integer
+        [7, 8, 9], // valid
+      ]),
     Error,
     "Error decoding array item at index 1",
   );
@@ -501,7 +534,7 @@ Deno.test("Test array schema fromCBORType exceptions", () => {
 
 Deno.test("Test array schema toCBORType exceptions", () => {
   const arraySchema = cs.array(cs.integer);
-  
+
   // Test with array containing invalid items
   assertThrows(
     () => arraySchema.toCBORType([1, 2, "hello" as unknown as number, 4]),
@@ -525,33 +558,34 @@ Deno.test("Test array schema element-specific exceptions - fromCBORType", () => 
     },
     toCBORType(value: string): CBORType {
       return value;
-    }
+    },
   };
-  
+
   const arraySchema = cs.array(customErrorSchema);
-  
+
   // Test with array containing the error-triggering element
   assertThrows(
     () => arraySchema.fromCBORType(["ok", "fine", "trigger-error", "good"]),
     Error,
     "Error decoding array item at index 2: Custom error triggered",
   );
-  
+
   // Test with array containing an element of wrong type
   assertThrows(
     () => arraySchema.fromCBORType(["ok", 123, "good"]),
     Error,
     "Error decoding array item at index 1: Expected string",
   );
-  
+
   // Test with nested array containing error-triggering element
   const nestedArraySchema = cs.array(cs.array(customErrorSchema));
   assertThrows(
-    () => nestedArraySchema.fromCBORType([
-      ["ok", "fine"],
-      ["good", "trigger-error", "ok"],
-      ["all", "good"]
-    ]),
+    () =>
+      nestedArraySchema.fromCBORType([
+        ["ok", "fine"],
+        ["good", "trigger-error", "ok"],
+        ["all", "good"],
+      ]),
     Error,
     "Error decoding array item at index 1",
   );
@@ -571,58 +605,61 @@ Deno.test("Test array schema element-specific exceptions - toCBORType", () => {
         throw new Error("Custom encoding error triggered");
       }
       return value;
-    }
+    },
   };
-  
+
   const arraySchema = cs.array(customErrorSchema);
-  
+
   // Test with array containing the error-triggering element
   assertThrows(
     () => arraySchema.toCBORType(["ok", "fine", "trigger-error", "good"]),
     Error,
     "Error encoding array item at index 2: Custom encoding error triggered",
   );
-  
+
   // Test with nested array containing error-triggering element
   const nestedArraySchema = cs.array(cs.array(customErrorSchema));
   assertThrows(
-    () => nestedArraySchema.toCBORType([
-      ["ok", "fine"],
-      ["good", "trigger-error", "ok"],
-      ["all", "good"]
-    ]),
+    () =>
+      nestedArraySchema.toCBORType([
+        ["ok", "fine"],
+        ["good", "trigger-error", "ok"],
+        ["all", "good"],
+      ]),
     Error,
     "Error encoding array item at index 1",
   );
-  
+
   // Test with complex schema that validates during encoding
   const complexSchema = cs.map([
     cs.field("id", cs.string),
     cs.field("value", cs.integer),
   ]);
-  
+
   // Create a wrapper that throws during encoding for a specific value
-  const validatingComplexSchema: CBORSchemaType<{id: string, value: number}> = {
-    fromCBORType(data: CBORType): {id: string, value: number} {
-      return complexSchema.fromCBORType(data);
-    },
-    toCBORType(value: {id: string, value: number}): CBORType {
-      if (value.id === "invalid-id") {
-        throw new Error("Invalid ID format");
-      }
-      return complexSchema.toCBORType(value);
-    }
-  };
-  
+  const validatingComplexSchema: CBORSchemaType<{ id: string; value: number }> =
+    {
+      fromCBORType(data: CBORType): { id: string; value: number } {
+        return complexSchema.fromCBORType(data);
+      },
+      toCBORType(value: { id: string; value: number }): CBORType {
+        if (value.id === "invalid-id") {
+          throw new Error("Invalid ID format");
+        }
+        return complexSchema.toCBORType(value);
+      },
+    };
+
   const complexArraySchema = cs.array(validatingComplexSchema);
-  
+
   // Test with array containing an object that fails validation during encoding
   assertThrows(
-    () => complexArraySchema.toCBORType([
-      {id: "valid-1", value: 10},
-      {id: "invalid-id", value: 20},
-      {id: "valid-3", value: 30}
-    ]),
+    () =>
+      complexArraySchema.toCBORType([
+        { id: "valid-1", value: 10 },
+        { id: "invalid-id", value: 20 },
+        { id: "valid-3", value: 30 },
+      ]),
     Error,
     "Error encoding array item at index 1: Invalid ID format",
   );
@@ -702,7 +739,7 @@ Deno.test("Test union schema error handling - toCBORType", () => {
     () => stringOrNumberSchema.toCBORType(true as unknown as number),
     Error,
     "Value doesn't match any schema in union",
-  ); 
+  );
 });
 
 Deno.test("Test union schema error handling - toCBORType", () => {
@@ -725,10 +762,12 @@ Deno.test("Test union schema error handling - toCBORType", () => {
       type: 123, // Should be string
       id: "not-a-number", // Should be integer
     };
-    
+
     // Cast to expected type to bypass TypeScript checks
-    const castedValue = invalidValue as any;
-    
+    const castedValue = invalidValue as unknown as Parameters<
+      typeof schema.toCBORType
+    >[0];
+
     // This should throw because the value doesn't match any schema in the union
     schema.toCBORType(castedValue);
   }
@@ -756,9 +795,9 @@ Deno.test("Test union schema toCBORType comprehensive", () => {
         throw new Error("Expected positive integer");
       }
       return value;
-    }
+    },
   };
-  
+
   const emailSchema: CBORSchemaType<string> = {
     fromCBORType(data: CBORType): string {
       if (typeof data !== "string") {
@@ -772,69 +811,70 @@ Deno.test("Test union schema toCBORType comprehensive", () => {
         throw new Error("Invalid email format");
       }
       return value;
-    }
+    },
   };
-  
+
   // Create a union of these schemas
   const unionSchema = cs.union([positiveIntegerSchema, emailSchema]);
-  
+
   // Test 1: Value that doesn't match any schema (negative number)
   assertThrows(
-    () => unionSchema.toCBORType(-5 as any),
+    () => unionSchema.toCBORType(-5),
     Error,
     "Value doesn't match any schema in union for encoding",
   );
-  
+
   // Test 2: Value that doesn't match any schema (string without @)
   assertThrows(
-    () => unionSchema.toCBORType("not-an-email" as any),
+    () => unionSchema.toCBORType("not-an-email"),
     Error,
     "Value doesn't match any schema in union for encoding",
   );
-  
+
   // Test 3: Value that doesn't match any schema (object)
   assertThrows(
-    () => unionSchema.toCBORType({key: "value"} as any),
+    () =>
+      unionSchema.toCBORType({ key: "value" } as unknown as string | number),
     Error,
     "Value doesn't match any schema in union for encoding",
   );
-  
+
   // Test 4: Value that doesn't match any schema (array)
   assertThrows(
-    () => unionSchema.toCBORType([1, 2, 3] as any),
+    () => unionSchema.toCBORType([1, 2, 3] as unknown as string | number),
     Error,
     "Value doesn't match any schema in union for encoding",
   );
-  
+
   // Test 5: Value that doesn't match any schema (boolean)
   assertThrows(
-    () => unionSchema.toCBORType(true as any),
+    () => unionSchema.toCBORType(true as unknown as string | number),
     Error,
     "Value doesn't match any schema in union for encoding",
   );
-  
+
   // Test 6: Value that doesn't match any schema (null)
   assertThrows(
-    () => unionSchema.toCBORType(null as any),
+    () => unionSchema.toCBORType(null as unknown as string | number),
     Error,
     "Value doesn't match any schema in union for encoding",
   );
-  
+
   // Test 7: Value that doesn't match any schema (undefined)
   assertThrows(
-    () => unionSchema.toCBORType(undefined as any),
+    () => unionSchema.toCBORType(undefined as unknown as string | number),
     Error,
     "Value doesn't match any schema in union for encoding",
   );
-  
+
   // Test with valid values to ensure they work
   const validEmail = "test@example.com";
   const validNumber = 42;
-  
+
   // These should not throw
-  const encodedEmail = unionSchema.toCBORType(validEmail as any);
-  const encodedNumber = unionSchema.toCBORType(validNumber as any);
-  
+  const encodedEmail = unionSchema.toCBORType(validEmail);
+  const encodedNumber = unionSchema.toCBORType(validNumber);
+
   // Verify the encoded values are correct
   assertEquals(encodedEmail, validEmail);
   assertEquals(encodedNumber, validNumber);
@@ -844,7 +884,7 @@ Deno.test("Test union schema toCBORType comprehensive", () => {
 Deno.test("Test union schema with empty schema array", () => {
   // Create a union with no schemas
   const emptyUnionSchema = cs.union([]);
-  
+
   // Test fromCBORType with various inputs - all should fail
   const testInputs: CBORType[] = [
     "string value",
@@ -856,7 +896,7 @@ Deno.test("Test union schema with empty schema array", () => {
     undefined,
     new Uint8Array([1, 2, 3]),
   ];
-  
+
   // All inputs should fail with fromCBORType
   for (const input of testInputs) {
     assertThrows(
@@ -865,11 +905,11 @@ Deno.test("Test union schema with empty schema array", () => {
       "Failed to decode union value",
     );
   }
-  
+
   // All inputs should fail with toCBORType
   for (const input of testInputs) {
     assertThrows(
-      () => emptyUnionSchema.toCBORType(input as any),
+      () => emptyUnionSchema.toCBORType(input as unknown),
       Error,
       "Failed to encode union value",
     );
@@ -880,19 +920,19 @@ Deno.test("Test union schema with empty schema array", () => {
 Deno.test("Test union schema with single schema", () => {
   // Create a union with just one schema
   const singleUnionSchema = cs.union([cs.string]);
-  
+
   // Test with valid input
   const validInput = "test string";
   assertEquals(singleUnionSchema.fromCBORType(validInput), validInput);
   assertEquals(singleUnionSchema.toCBORType(validInput), validInput);
-  
+
   // Test with invalid input
   assertThrows(
     () => singleUnionSchema.fromCBORType(42),
     Error,
     "Value doesn't match any schema in union",
   );
-  
+
   assertThrows(
     () => singleUnionSchema.toCBORType(42 as unknown as string),
     Error,
@@ -920,10 +960,13 @@ Deno.test("Test complex union schema error handling", () => {
 
   // Test with partially valid map but wrong field type
   assertThrows(
-    () => complexSchema.fromCBORType(new Map([
-      ["id", "not-a-number"], // String instead of integer
-      ["name", "test"],
-    ])),
+    () =>
+      complexSchema.fromCBORType(
+        new Map([
+          ["id", "not-a-number"], // String instead of integer
+          ["name", "test"],
+        ]),
+      ),
     Error,
     "Value doesn't match any schema in union",
   );
@@ -937,10 +980,13 @@ Deno.test("Test complex union schema error handling", () => {
 
   // Test encoding with invalid data
   assertThrows(
-    () => complexSchema.toCBORType({
-      id: "invalid",
-      name: "test",
-    } as unknown as string[] | { id: number; name: string }),
+    () =>
+      complexSchema.toCBORType(
+        {
+          id: "invalid",
+          name: "test",
+        } as unknown as string[] | { id: number; name: string },
+      ),
     Error,
     "Value doesn't match any schema in union for encoding",
   );
@@ -959,22 +1005,22 @@ Deno.test("Test tagged schema", () => {
 Deno.test("Test tagged schema error handling - tag mismatch", () => {
   // Create a schema with tag number 123
   const schema = cs.tagged(123, cs.string);
-  
+
   // Create a CBORTag with a different tag number (456)
   const wrongTag = new CBORTag(456, "test-value");
-  
+
   // Test that it throws when the tag number doesn't match
   assertThrows(
     () => schema.fromCBORType(wrongTag),
     Error,
-    "Expected tag 123, got 456"
+    "Expected tag 123, got 456",
   );
 });
 
 Deno.test("Test tagged schema error handling - not a tag", () => {
   // Create a tagged schema
   const schema = cs.tagged(123, cs.string);
-  
+
   // Test with various non-tag inputs
   const testCases = [
     "string value",
@@ -984,12 +1030,12 @@ Deno.test("Test tagged schema error handling - not a tag", () => {
     new Map([["key", "value"]]),
     null,
   ];
-  
+
   for (const input of testCases) {
     assertThrows(
       () => schema.fromCBORType(input),
       Error,
-      "Expected CBORTag"
+      "Expected CBORTag",
     );
   }
 });
@@ -997,15 +1043,15 @@ Deno.test("Test tagged schema error handling - not a tag", () => {
 Deno.test("Test tagged schema error handling - inner schema validation", () => {
   // Create a tagged schema with a string schema inside
   const schema = cs.tagged(123, cs.string);
-  
+
   // Create a valid tag but with an invalid value type (number instead of string)
   const tagWithWrongValueType = new CBORTag(123, 42);
-  
+
   // Test that it propagates errors from the inner schema
   assertThrows(
     () => schema.fromCBORType(tagWithWrongValueType),
     Error,
-    "Expected string"
+    "Expected string",
   );
 });
 
@@ -1013,18 +1059,18 @@ Deno.test("Test tagged schema error handling - inner schema validation", () => {
 Deno.test("Test optional schema with undefined input", () => {
   // Create an optional schema
   const optionalStringSchema = cs.optional(cs.string);
-  
+
   // Test with undefined value
   const result = optionalStringSchema.toCBORType(undefined);
-  
+
   // Verify that the result is undefined
   assertEquals(result, undefined);
-  
+
   // Test round-trip encoding/decoding with undefined
   const encoded = cs.toCBOR(optionalStringSchema, undefined);
   const decoded = cs.fromCBOR(optionalStringSchema, encoded);
   assertEquals(decoded, undefined);
-  
+
   // Test with actual value
   const stringValue = "test string";
   const encodedString = cs.toCBOR(optionalStringSchema, stringValue);
@@ -1040,7 +1086,7 @@ Deno.test("Test optional schema in complex objects", () => {
     cs.field("email", cs.optional(cs.string)),
     cs.field("age", cs.optional(cs.integer)),
   ]);
-  
+
   // Test with all fields present
   const fullUser = {
     name: "John Doe",
@@ -1050,7 +1096,7 @@ Deno.test("Test optional schema in complex objects", () => {
   const encodedFull = cs.toCBOR(userSchema, fullUser);
   const decodedFull = cs.fromCBOR(userSchema, encodedFull);
   assertEquals(decodedFull, fullUser);
-  
+
   // Test with some optional fields undefined
   const partialUser = {
     name: "Jane Doe",
@@ -1062,7 +1108,7 @@ Deno.test("Test optional schema in complex objects", () => {
   assertEquals(decodedPartial.name, "Jane Doe");
   assertEquals(decodedPartial.email, undefined);
   assertEquals(decodedPartial.age, 25);
-  
+
   // Test with all optional fields undefined
   const minimalUser = {
     name: "Bob Smith",
@@ -1365,7 +1411,12 @@ Deno.test("Test map schema with missing required fields during encoding", () => 
     age: 30,
     // email is missing
     metadata: "some data",
-  } as unknown as { name: string; age: number; email: string; metadata?: string };
+  } as unknown as {
+    name: string;
+    age: number;
+    email: string;
+    metadata?: string;
+  };
 
   assertThrows(
     () => cs.toCBOR(userSchema, incompleteUser),
@@ -1379,7 +1430,12 @@ Deno.test("Test map schema with missing required fields during encoding", () => 
     // age is missing
     // email is missing
     metadata: "some data",
-  } as unknown as { name: string; age: number; email: string; metadata?: string };
+  } as unknown as {
+    name: string;
+    age: number;
+    email: string;
+    metadata?: string;
+  };
 
   assertThrows(
     () => cs.toCBOR(userSchema, veryIncompleteUser),
@@ -1409,7 +1465,9 @@ Deno.test("Test map schema with type mismatches during encoding", () => {
       throw new Error("Expected an Error instance");
     }
     if (!error.message.includes("Error encoding field age")) {
-      throw new Error(`Expected error message to include "Error encoding field age", but got "${error.message}"`);
+      throw new Error(
+        `Expected error message to include "Error encoding field age", but got "${error.message}"`,
+      );
     }
   }
   if (!errorThrown) {
@@ -1482,10 +1540,14 @@ Deno.test("Test complex nested map schema with invalid data", () => {
       throw new Error("Expected an Error instance");
     }
     if (!error.message.includes("Error encoding field contact")) {
-      throw new Error(`Expected error message to include "Error encoding field contact", but got "${error.message}"`);
+      throw new Error(
+        `Expected error message to include "Error encoding field contact", but got "${error.message}"`,
+      );
     }
   }
   if (!errorThrown) {
-    throw new Error("Expected an error to be thrown for missing required field in nested structure");
+    throw new Error(
+      "Expected an error to be thrown for missing required field in nested structure",
+    );
   }
 });

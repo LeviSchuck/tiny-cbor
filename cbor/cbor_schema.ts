@@ -449,10 +449,10 @@ export class CBORSchema {
             }
           }
         }
-        
+
         throw new Error("Failed to encode union value");
-      }
-    }
+      },
+    };
   }
 
   /**
