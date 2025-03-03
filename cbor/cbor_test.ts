@@ -512,6 +512,32 @@ Deno.test({
   },
 });
 Deno.test({
+  name: "Can decode shared array buffers",
+  fn() {
+    const sharedBuffer = new SharedArrayBuffer(
+      APPLE_MACBOOK_WEBAUTHN_PAYLOAD.buffer.byteLength,
+    );
+    // copy to shared buffer
+    const sharedView = new DataView(sharedBuffer);
+    for (let i = 0; i < APPLE_MACBOOK_WEBAUTHN_PAYLOAD.buffer.byteLength; i++) {
+      sharedView.setUint8(i, APPLE_MACBOOK_WEBAUTHN_PAYLOAD[i]);
+    }
+    assertEquals(
+      decodeCBOR(sharedBuffer),
+      DECODED_APPLE_MACBOOK_WEBAUTHN_PAYLOAD,
+    );
+  },
+});
+Deno.test({
+  name: "Rejects unsupported data types",
+  fn() {
+    assertThrows(() => {
+      // Lie about it :)
+      decodeCBOR("hello world" as unknown as DataView);
+    });
+  },
+});
+Deno.test({
   name: "Can encode webauthn registration",
   fn() {
     // Apple MacBook
