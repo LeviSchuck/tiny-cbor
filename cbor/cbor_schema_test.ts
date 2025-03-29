@@ -241,7 +241,9 @@ Deno.test("Test union of tagged values", () => {
     dateValue,
   );
   assertEquals(
-    taggedUnionSchema.fromCBORType(taggedUnionSchema.toCBORType(timestampValue)),
+    taggedUnionSchema.fromCBORType(
+      taggedUnionSchema.toCBORType(timestampValue),
+    ),
     timestampValue,
   );
   assertEquals(

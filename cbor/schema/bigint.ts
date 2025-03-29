@@ -24,4 +24,4 @@ export const bigint: CBORSchemaType<bigint> = {
     }
     return value;
   },
-}; 
+};

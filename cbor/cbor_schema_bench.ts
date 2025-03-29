@@ -1,4 +1,4 @@
-import { cs, type CBORTypedTag } from "./cbor_schema.ts";
+import { type CBORTypedTag, cs } from "./cbor_schema.ts";
 import {
   DECODED_APPLE_MACBOOK_WEBAUTHN_PAYLOAD,
   DECODED_WEBAUTHN_REGISTRATION_PAYLOAD,
@@ -59,7 +59,10 @@ const encodedUnionBool = UnionSchema.toCBORType(unionBoolValue);
 
 // Tagged Schema
 const TaggedSchema = cs.tagged(0, cs.string); // Tag 0 is for date-time strings
-const taggedValue: CBORTypedTag<0, string> = { tag: 0, value: new Date().toISOString() };
+const taggedValue: CBORTypedTag<0, string> = {
+  tag: 0,
+  value: new Date().toISOString(),
+};
 const encodedTagged = TaggedSchema.toCBORType(taggedValue);
 
 // Optional Schema

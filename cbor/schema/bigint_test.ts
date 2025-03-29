@@ -54,4 +54,4 @@ Deno.test("BigInt types with valid inputs - fromCBORType", () => {
   // Test another large BigInt
   const anotherBigInt = BigInt("18446744073709551615");
   assertEquals(bigint.fromCBORType(anotherBigInt), anotherBigInt);
-}); 
+});

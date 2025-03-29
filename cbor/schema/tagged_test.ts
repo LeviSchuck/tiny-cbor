@@ -1,5 +1,5 @@
 import { assertThrows } from "jsr:@std/assert";
-import { tagged, type CBORTypedTag } from "./tagged.ts";
+import { type CBORTypedTag, tagged } from "./tagged.ts";
 import { string } from "./string.ts";
 import { CBORTag } from "../cbor.ts";
 import { assertEquals } from "jsr:@std/assert";
