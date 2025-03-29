@@ -2,6 +2,8 @@ import { assertEquals, assertThrows } from "jsr:@std/assert";
 import { cs } from "./cbor_schema.ts";
 import type { CBORType } from "./cbor.ts";
 import type { CBORSchemaType } from "./schema/type.ts";
+import { CBORTag } from "./cbor.ts";
+import type { CBORTypedTag } from "./schema/tagged.ts";
 
 // Basic object test
 const ObjectDefinition = cs.map([
@@ -109,6 +111,7 @@ Deno.test("Test complex nested map schema with invalid data", () => {
     cs.field("name", cs.string),
     cs.field("contact", cs.nested(contactSchema)),
     cs.field("tags", cs.array(cs.string)),
+    cs.field("largeId", cs.bigint),
   ]);
 
   // Create an object with invalid nested data (missing required field in address)
@@ -127,6 +130,7 @@ Deno.test("Test complex nested map schema with invalid data", () => {
         } as unknown as { street: string; city: string; zipCode: string },
       },
       tags: ["customer", "premium"],
+      largeId: BigInt("9007199254740992"),
     });
   } catch (error) {
     errorThrown = true;
@@ -201,4 +205,115 @@ Deno.test("Test map schema with undefined output from nested type", () => {
   const emptyResult = mapSchema.toCBORType(allUndefinedObject);
   assertEquals(emptyResult instanceof Map, true);
   assertEquals((emptyResult as Map<string, string>).size, 0);
+});
+
+// Test union of tagged values
+Deno.test("Test union of tagged values", () => {
+  // Create schemas for different tagged values
+  const dateSchema = cs.tagged(0, cs.string); // Tag 0 for date strings
+  const timestampSchema = cs.tagged(1, cs.integer); // Tag 1 for timestamps
+  const flagSchema = cs.tagged(2, cs.boolean); // Tag 2 for boolean flags
+
+  // Create a union of the tagged schemas
+  const taggedUnionSchema = cs.union([
+    dateSchema,
+    timestampSchema,
+    flagSchema,
+  ]);
+
+  // Test valid cases
+  const dateValue: CBORTypedTag<0, string> = {
+    tag: 0,
+    value: "2024-03-03T12:00:00Z",
+  };
+  const timestampValue: CBORTypedTag<1, number> = {
+    tag: 1,
+    value: 1709481600,
+  };
+  const flagValue: CBORTypedTag<2, boolean> = {
+    tag: 2,
+    value: true,
+  };
+
+  // Test encoding and decoding each type
+  assertEquals(
+    taggedUnionSchema.fromCBORType(taggedUnionSchema.toCBORType(dateValue)),
+    dateValue,
+  );
+  assertEquals(
+    taggedUnionSchema.fromCBORType(taggedUnionSchema.toCBORType(timestampValue)),
+    timestampValue,
+  );
+  assertEquals(
+    taggedUnionSchema.fromCBORType(taggedUnionSchema.toCBORType(flagValue)),
+    flagValue,
+  );
+
+  // Test invalid cases
+  assertThrows(
+    () => taggedUnionSchema.fromCBORType(new CBORTag(3, "invalid")),
+    Error,
+    "Value doesn't match any schema in union",
+  );
+
+  // Test with wrong value type for a tag
+  assertThrows(
+    () => taggedUnionSchema.fromCBORType(new CBORTag(0, 42)),
+    Error,
+    "Value doesn't match any schema in union",
+  );
+});
+
+// Test list of union of tagged values
+Deno.test("Test list of union of tagged values", () => {
+  // Create schemas for different tagged values
+  const dateSchema = cs.tagged(0, cs.string); // Tag 0 for date strings
+  const timestampSchema = cs.tagged(1, cs.integer); // Tag 1 for timestamps
+  const flagSchema = cs.tagged(2, cs.boolean); // Tag 2 for boolean flags
+
+  // Create a union of the tagged schemas
+  const taggedUnionSchema = cs.union([
+    dateSchema,
+    timestampSchema,
+    flagSchema,
+  ]);
+
+  // Create a list schema of the union
+  const taggedListSchema = cs.array(taggedUnionSchema);
+
+  // Test valid list with mixed tagged values
+  const mixedListValue = [
+    { tag: 0, value: "2024-03-03T12:00:00Z" } as CBORTypedTag<0, string>,
+    { tag: 1, value: 1709481600 } as CBORTypedTag<1, number>,
+    { tag: 2, value: true } as CBORTypedTag<2, boolean>,
+  ];
+
+  // Test round trip
+  const encoded = taggedListSchema.toCBORType(mixedListValue);
+  const decoded = taggedListSchema.fromCBORType(encoded);
+  assertEquals(decoded, mixedListValue);
+
+  // Test invalid list with wrong tag
+  const invalidListValue = [
+    { tag: 0, value: "2024-03-03T12:00:00Z" } as CBORTypedTag<0, string>,
+    { tag: 3, value: "invalid" } as unknown as CBORTypedTag<1, number>,
+  ];
+
+  assertThrows(
+    () => taggedListSchema.toCBORType(invalidListValue),
+    Error,
+    "Value doesn't match any schema in union for encoding",
+  );
+
+  // Test invalid list with wrong value type
+  const invalidValueList = [
+    { tag: 0, value: "2024-03-03T12:00:00Z" } as CBORTypedTag<0, string>,
+    { tag: 0, value: 42 } as unknown as CBORTypedTag<0, string>,
+  ];
+
+  assertThrows(
+    () => taggedListSchema.toCBORType(invalidValueList),
+    Error,
+    "Value doesn't match any schema in union",
+  );
 });

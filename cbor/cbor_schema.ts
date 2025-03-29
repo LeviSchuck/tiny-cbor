@@ -7,10 +7,11 @@ import { float } from "./schema/float.ts";
 import { bytes } from "./schema/bytes.ts";
 import { tuple } from "./schema/tuple.ts";
 import { union } from "./schema/union.ts";
-import { tagged } from "./schema/tagged.ts";
+import { tagged, type CBORTypedTag } from "./schema/tagged.ts";
 import { optional } from "./schema/optional.ts";
 import { field, map, numberField } from "./schema/map.ts";
 import { nested } from "./schema/nested.ts";
+import { bigint } from "./schema/bigint.ts";
 import type { CBORSchemaType, FieldDefinition } from "./schema/type.ts";
 
 /**
@@ -42,6 +43,7 @@ import type { CBORSchemaType, FieldDefinition } from "./schema/type.ts";
 export class CBORSchema {
   static array = array;
   static integer = integer;
+  static bigint = bigint;
   static string = string;
   static boolean = boolean;
   static float = float;
@@ -127,3 +129,5 @@ export const cs = CBORSchema;
 
 // Export types for external use
 export type { FieldDefinition };
+
+export { CBORTypedTag };

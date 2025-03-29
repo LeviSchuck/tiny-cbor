@@ -1,5 +1,5 @@
 import { assertThrows } from "jsr:@std/assert";
-import { tagged } from "./tagged.ts";
+import { tagged, type CBORTypedTag } from "./tagged.ts";
 import { string } from "./string.ts";
 import { CBORTag } from "../cbor.ts";
 import { assertEquals } from "jsr:@std/assert";
@@ -35,9 +35,16 @@ Deno.test("Tagged types with invalid inputs - toCBORType", () => {
 
   // Tagged schema should reject invalid inner value
   assertThrows(
-    () => dateSchema.toCBORType(42 as unknown as string),
+    () => dateSchema.toCBORType({ tag: 0, value: 42 as unknown as string }),
     Error,
     "Expected string",
+  );
+
+  // Tagged schema should reject wrong tag number (lie to the type system so the test can execute)
+  assertThrows(
+    () => dateSchema.toCBORType({ tag: 1 as number as 0, value: "2024-03-03" }),
+    Error,
+    "Expected tag 0",
   );
 });
 
@@ -46,20 +53,21 @@ Deno.test("Tagged types with valid inputs", () => {
   // Test date schema (tag 0 with string)
   const dateSchema = tagged(0, string);
   const dateStr = "2024-03-03T12:00:00Z";
+  const taggedDate: CBORTypedTag<0, string> = { tag: 0, value: dateStr };
 
   // Test encoding
-  const encoded = dateSchema.toCBORType(dateStr);
+  const encoded = dateSchema.toCBORType(taggedDate);
   assertEquals(encoded instanceof CBORTag, true);
   assertEquals((encoded as CBORTag).tag, 0);
   assertEquals((encoded as CBORTag).value, dateStr);
 
   // Test decoding
   const decoded = dateSchema.fromCBORType(new CBORTag(0, dateStr));
-  assertEquals(decoded, dateStr);
+  assertEquals(decoded.tag, 0);
+  assertEquals(decoded.value, dateStr);
 
   // Test round trip
-  assertEquals(
-    dateSchema.fromCBORType(dateSchema.toCBORType(dateStr)),
-    dateStr,
-  );
+  const roundTrip = dateSchema.fromCBORType(dateSchema.toCBORType(taggedDate));
+  assertEquals(roundTrip.tag, 0);
+  assertEquals(roundTrip.value, dateStr);
 });
