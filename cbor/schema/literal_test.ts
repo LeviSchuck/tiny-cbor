@@ -255,3 +255,93 @@ Deno.test("Test Uint8Array literals", () => {
     "Expected Uint8Array, got object",
   );
 });
+
+// Test null literals
+Deno.test("Test null literals", () => {
+  const schema = literal(null);
+
+  // Test valid null
+  assertEquals(schema.fromCBORType(null), null);
+  assertEquals(schema.toCBORType(null), null);
+
+  // Test undefined when null expected
+  assertThrows(
+    () => schema.fromCBORType(undefined as unknown as null),
+    Error,
+    "Expected null, got undefined",
+  );
+  assertThrows(
+    () => schema.toCBORType(undefined as unknown as null),
+    Error,
+    "Expected null, got undefined",
+  );
+
+  // Test wrong type
+  assertThrows(
+    () => schema.fromCBORType("null"),
+    Error,
+    "Expected null, got string",
+  );
+  assertThrows(
+    () => schema.toCBORType("null" as unknown as null),
+    Error,
+    "Expected null, got string",
+  );
+
+  // Test Uint8Array when null expected
+  assertThrows(
+    () => schema.fromCBORType(new Uint8Array([1, 2, 3])),
+    Error,
+    "Expected null, got Uint8Array",
+  );
+  assertThrows(
+    () => schema.toCBORType(new Uint8Array([1, 2, 3]) as unknown as null),
+    Error,
+    "Expected null, got Uint8Array",
+  );
+});
+
+// Test undefined literals
+Deno.test("Test undefined literals", () => {
+  const schema = literal(undefined);
+
+  // Test valid undefined
+  assertEquals(schema.fromCBORType(undefined), undefined);
+  assertEquals(schema.toCBORType(undefined), undefined);
+
+  // Test null when undefined expected
+  assertThrows(
+    () => schema.fromCBORType(null as unknown as undefined),
+    Error,
+    "Expected undefined, got null",
+  );
+  assertThrows(
+    () => schema.toCBORType(null as unknown as undefined),
+    Error,
+    "Expected undefined, got null",
+  );
+
+  // Test wrong type
+  assertThrows(
+    () => schema.fromCBORType("undefined"),
+    Error,
+    "Expected undefined, got string",
+  );
+  assertThrows(
+    () => schema.toCBORType("undefined" as unknown as undefined),
+    Error,
+    "Expected undefined, got string",
+  );
+
+  // Test Uint8Array when undefined expected
+  assertThrows(
+    () => schema.fromCBORType(new Uint8Array([1, 2, 3])),
+    Error,
+    "Expected undefined, got Uint8Array",
+  );
+  assertThrows(
+    () => schema.toCBORType(new Uint8Array([1, 2, 3]) as unknown as undefined),
+    Error,
+    "Expected undefined, got Uint8Array",
+  );
+});

@@ -571,3 +571,77 @@ Deno.bench({
     );
   },
 });
+
+const NullLiteralSchema = cs.literal(null);
+const encodedNullLiteral = NullLiteralSchema.toCBORType(null);
+
+// Null Literal Benchmarks
+Deno.bench({
+  name: "Null Literal - From CBORType",
+  fn() {
+    const _value = NullLiteralSchema.fromCBORType(encodedNullLiteral);
+  },
+});
+
+Deno.bench({
+  name: "Null Literal - To CBORType",
+  fn() {
+    const _encoded = NullLiteralSchema.toCBORType(null);
+  },
+});
+
+const UndefinedLiteralSchema = cs.literal(undefined);
+const encodedUndefinedLiteral = UndefinedLiteralSchema.toCBORType(undefined);
+
+// Undefined Literal Benchmarks
+Deno.bench({
+  name: "Undefined Literal - From CBORType",
+  fn() {
+    const _value = UndefinedLiteralSchema.fromCBORType(encodedUndefinedLiteral);
+  },
+});
+
+Deno.bench({
+  name: "Undefined Literal - To CBORType",
+  fn() {
+    const _encoded = UndefinedLiteralSchema.toCBORType(undefined);
+  },
+});
+
+const LazyStringSchema = cs.lazy(() => cs.string);
+const encodedLazyString = LazyStringSchema.toCBORType("hello");
+const lazyStringValue = "hello";
+
+// Lazy String Benchmarks
+Deno.bench({
+  name: "Lazy String - From CBORType",
+  fn() {
+    const _value = LazyStringSchema.fromCBORType(encodedLazyString);
+  },
+});
+
+Deno.bench({
+  name: "Lazy String - To CBORType",
+  fn() {
+    const _encoded = LazyStringSchema.toCBORType(lazyStringValue);
+  },
+});
+
+const LazyMapSchema = cs.lazy(() => cs.map([cs.field("name", cs.string)]));
+const encodedLazyMap = LazyMapSchema.toCBORType({ name: "John Doe" });
+const lazyMapValue = { name: "John Doe" };
+
+// Lazy Map Benchmarks
+Deno.bench({
+  name: "Lazy Map - From CBORType",
+  fn() {
+    const _value = LazyMapSchema.fromCBORType(encodedLazyMap);
+  },
+});
+
+Deno.bench({
+  name: "Lazy Map - To CBORType",
+  fn() {
+    const _encoded = LazyMapSchema.toCBORType(lazyMapValue);
+  },
+});
