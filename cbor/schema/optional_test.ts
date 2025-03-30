@@ -3,6 +3,8 @@ import { optional } from "./optional.ts";
 import { float } from "./float.ts";
 import { string } from "./string.ts";
 import { assertEquals } from "jsr:@std/assert";
+import type { CBORType } from "../cbor.ts";
+import type { CBORSchemaType } from "./type.ts";
 
 // Type validation tests
 Deno.test("Optional types with invalid inputs - fromCBORType", () => {
@@ -61,4 +63,105 @@ Deno.test("Optional types with valid inputs", () => {
     optionalStringSchema.fromCBORType(encodedStrUndefined),
     undefined,
   );
+});
+
+// Test custom type throwing Error in optional values
+Deno.test("Test custom type throwing Error in optional values", () => {
+  // Create a schema that will throw a custom error for specific values
+  const customErrorSchema: CBORSchemaType<string> = {
+    fromCBORType(data: CBORType): string {
+      if (data === "trigger-error") {
+        throw new Error("Custom error triggered in fromCBORType");
+      }
+      if (typeof data !== "string") {
+        throw new Error("Expected string");
+      }
+      return data;
+    },
+    toCBORType(value: string): CBORType {
+      if (value === "trigger-error") {
+        throw new Error("Custom error triggered in toCBORType");
+      }
+      return value;
+    },
+  };
+
+  const optionalSchema = optional(customErrorSchema);
+
+  // Test with error-triggering value in fromCBORType
+  assertThrows(
+    () => optionalSchema.fromCBORType("trigger-error"),
+    Error,
+    "Custom error triggered in fromCBORType",
+  );
+
+  // Test with error-triggering value in toCBORType
+  assertThrows(
+    () => optionalSchema.toCBORType("trigger-error"),
+    Error,
+    "Custom error triggered in toCBORType",
+  );
+
+  // Test with undefined in toCBORType (should not throw)
+  const encodedUndefined = optionalSchema.toCBORType(undefined);
+  assertEquals(optionalSchema.fromCBORType(encodedUndefined), undefined);
+});
+
+// Test custom type throwing non-Error in optional values
+Deno.test("Test custom type throwing non-Error in optional values", () => {
+  // Create a schema that throws non-Error objects
+  const nonErrorSchema: CBORSchemaType<string> = {
+    fromCBORType(data: CBORType): string {
+      if (data === "throw-string") {
+        throw "String error in fromCBORType";
+      }
+      if (data === "throw-object") {
+        throw { reason: "Custom object error in fromCBORType" };
+      }
+      return String(data);
+    },
+    toCBORType(value: string): CBORType {
+      if (value === "throw-string-encode") {
+        throw "String error in toCBORType";
+      }
+      if (value === "throw-object-encode") {
+        throw { reason: "Custom object error in toCBORType" };
+      }
+      return value;
+    },
+  };
+
+  const optionalSchema = optional(nonErrorSchema);
+
+  // Test string throw in fromCBORType
+  assertThrows(
+    () => optionalSchema.fromCBORType("throw-string"),
+    Error,
+    "String error in fromCBORType",
+  );
+
+  // Test object throw in fromCBORType
+  assertThrows(
+    () => optionalSchema.fromCBORType("throw-object"),
+    Error,
+    "[object Object]",
+  );
+
+  // Test string throw in toCBORType
+  assertThrows(
+    () => optionalSchema.toCBORType("throw-string-encode"),
+    Error,
+    "String error in toCBORType",
+  );
+
+  // Test object throw in toCBORType
+  assertThrows(
+    () => optionalSchema.toCBORType("throw-object-encode"),
+    Error,
+    "[object Object]",
+  );
+
+  // Test with undefined in toCBORType (should not throw)
+  const encodedUndefined = optionalSchema.toCBORType(undefined);
+  assertEquals(optionalSchema.fromCBORType(encodedUndefined), undefined);
 });

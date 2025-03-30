@@ -81,6 +81,34 @@ Deno.test("Test array schema element-specific exceptions - fromCBORType", () => 
   );
 });
 
+// Test array schema with element-specific exceptions in toCBORType
+Deno.test("Test array schema element-specific exceptions - toCBORType", () => {
+  // Create a schema that will throw a custom error for a specific element
+  const customErrorSchema: CBORSchemaType<string> = {
+    fromCBORType(data: CBORType): string {
+      if (typeof data !== "string") {
+        throw new Error("Expected string");
+      }
+      return data;
+    },
+    toCBORType(value: string): CBORType {
+      if (value === "trigger-error") {
+        throw new Error("Custom error triggered in toCBORType");
+      }
+      return value;
+    },
+  };
+
+  const arraySchema = array(customErrorSchema);
+
+  // Test with array containing the error-triggering element in the middle
+  assertThrows(
+    () => arraySchema.toCBORType(["ok", "trigger-error", "good"]),
+    Error,
+    "Error encoding array item at index 1: Custom error triggered in toCBORType",
+  );
+});
+
 // Test array schema with non-Error throws
 Deno.test("Test array schema with non-Error throws", () => {
   // Create a schema that throws a string instead of an Error

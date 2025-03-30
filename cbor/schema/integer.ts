@@ -12,17 +12,38 @@ import type { CBORType } from "../cbor.ts";
  * const decoded = cs.fromCBOR(schema, encoded); // 42
  * ```
  */
-export const integer: CBORSchemaType<number> = {
+
+function tryFromCBORType(data: CBORType): [true, number] | [false, string] {
+  if (typeof data !== "number" || !Number.isInteger(data)) {
+    return [false, `Expected integer, got ${data}`];
+  }
+  return [true, data];
+}
+
+function tryToCBORType(value: number): [true, CBORType] | [false, string] {
+  if (!Number.isInteger(value)) {
+    return [false, `Value ${value} is not a valid integer`];
+  }
+  return [true, value];
+}
+
+const integerSchema: CBORSchemaType<number> = {
   fromCBORType(data: CBORType): number {
-    if (typeof data !== "number" || !Number.isInteger(data)) {
-      throw new Error(`Expected integer, got ${data}`);
+    const result = tryFromCBORType(data);
+    if (!result[0]) {
+      throw new Error(result[1]);
     }
-    return data;
+    return result[1];
   },
   toCBORType(value: number): CBORType {
-    if (!Number.isInteger(value)) {
-      throw new Error(`Value ${value} is not a valid integer`);
+    const result = tryToCBORType(value);
+    if (!result[0]) {
+      throw new Error(result[1]);
     }
-    return value;
+    return result[1];
   },
+  tryFromCBORType,
+  tryToCBORType,
 };
+
+export const integer = integerSchema;

@@ -78,6 +78,19 @@ Deno.test("Test complex union schema error handling", () => {
   );
 
   // Test encoding with invalid data
+  try {
+    console.log(
+      "result",
+      complexSchema.toCBORType(
+        {
+          id: "invalid",
+          name: "test",
+        } as unknown as string[] | { id: number; name: string },
+      ),
+    );
+  } catch (e) {
+    console.log(e);
+  }
   assertThrows(
     () =>
       complexSchema.toCBORType(

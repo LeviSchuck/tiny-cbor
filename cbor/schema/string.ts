@@ -12,17 +12,37 @@ import type { CBORType } from "../cbor.ts";
  * const decoded = cs.fromCBOR(schema, encoded); // "hello"
  * ```
  */
-export const string: CBORSchemaType<string> = {
+function tryFromCBORType(data: CBORType): [true, string] | [false, string] {
+  if (typeof data !== "string") {
+    return [false, `Expected string, got ${typeof data}`];
+  }
+  return [true, data];
+}
+
+function tryToCBORType(value: string): [true, CBORType] | [false, string] {
+  if (typeof value !== "string") {
+    return [false, `Expected string, got ${typeof value}`];
+  }
+  return [true, value];
+}
+
+const stringSchema: CBORSchemaType<string> = {
   fromCBORType(data: CBORType): string {
-    if (typeof data !== "string") {
-      throw new Error(`Expected string, got ${typeof data}`);
+    const result = tryFromCBORType(data);
+    if (!result[0]) {
+      throw new Error(result[1]);
     }
-    return data;
+    return result[1];
   },
   toCBORType(value: string): CBORType {
-    if (typeof value !== "string") {
-      throw new Error(`Expected string, got ${typeof value}`);
+    const result = tryToCBORType(value);
+    if (!result[0]) {
+      throw new Error(result[1]);
     }
-    return value;
+    return result[1];
   },
+  tryFromCBORType,
+  tryToCBORType,
 };
+
+export const string = stringSchema;

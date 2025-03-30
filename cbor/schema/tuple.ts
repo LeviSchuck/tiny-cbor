@@ -21,59 +21,101 @@ import type { CBORType } from "../cbor.ts";
 export function tuple<T extends unknown[]>(
   schemas: { [K in keyof T]: CBORSchemaType<T[K]> },
 ): CBORSchemaType<T> {
-  return {
-    fromCBORType(data: CBORType): T {
-      if (!Array.isArray(data)) {
-        throw new Error(`Expected array for tuple, got ${typeof data}`);
-      }
+  function tryFromCBORType(data: CBORType): [true, T] | [false, string] {
+    if (!Array.isArray(data)) {
+      return [false, `Expected array for tuple, got ${typeof data}`];
+    }
 
-      if (data.length !== schemas.length) {
-        throw new Error(
-          `Expected tuple of length ${schemas.length}, got ${data.length}`,
-        );
-      }
+    if (data.length !== schemas.length) {
+      return [
+        false,
+        `Expected tuple of length ${schemas.length}, got ${data.length}`,
+      ];
+    }
 
-      // Create a tuple with the correct types
-      const result = [] as unknown as T;
+    // Create a tuple with the correct types
+    const result = [] as unknown as T;
 
-      for (let i = 0; i < schemas.length; i++) {
+    for (let i = 0; i < schemas.length; i++) {
+      const itemResult = schemas[i].tryFromCBORType?.(data[i]);
+      if (itemResult) {
+        if (!itemResult[0]) {
+          return [
+            false,
+            `Error decoding tuple item at index ${i}: ${itemResult[1]}`,
+          ];
+        }
+        (result as Record<string, unknown>)[i] = itemResult[1];
+      } else {
         try {
           (result as Record<string, unknown>)[i] = schemas[i].fromCBORType(
             data[i],
           );
         } catch (error) {
           if (error instanceof Error) {
-            throw new Error(
+            return [
+              false,
               `Error decoding tuple item at index ${i}: ${error.message}`,
-            );
+            ];
           }
-          throw new Error(
-            `Error decoding tuple item at index ${i}: ${error}`,
-          );
+          return [false, `Error decoding tuple item at index ${i}: ${error}`];
         }
       }
+    }
 
-      return result;
-    },
-    toCBORType(value: T): CBORType {
-      if (!Array.isArray(value) || value.length !== schemas.length) {
-        throw new Error(`Expected tuple of length ${schemas.length}`);
-      }
+    return [true, result];
+  }
 
-      return schemas.map((schema, index) => {
+  function tryToCBORType(value: T): [true, CBORType] | [false, string] {
+    if (!Array.isArray(value) || value.length !== schemas.length) {
+      return [false, `Expected tuple of length ${schemas.length}`];
+    }
+
+    const result: CBORType[] = [];
+    for (let i = 0; i < schemas.length; i++) {
+      const itemResult = schemas[i].tryToCBORType?.(value[i]);
+      if (itemResult) {
+        if (!itemResult[0]) {
+          return [
+            false,
+            `Error encoding tuple item at index ${i}: ${itemResult[1]}`,
+          ];
+        }
+        result.push(itemResult[1]);
+      } else {
         try {
-          return schema.toCBORType(value[index]);
+          result.push(schemas[i].toCBORType(value[i]));
         } catch (error) {
           if (error instanceof Error) {
-            throw new Error(
-              `Error encoding tuple item at index ${index}: ${error.message}`,
-            );
+            return [
+              false,
+              `Error encoding tuple item at index ${i}: ${error.message}`,
+            ];
           }
-          throw new Error(
-            `Error encoding tuple item at index ${index}: ${error}`,
-          );
+          return [false, `Error encoding tuple item at index ${i}: ${error}`];
         }
-      });
+      }
+    }
+
+    return [true, result];
+  }
+
+  return {
+    fromCBORType(data: CBORType): T {
+      const result = tryFromCBORType(data);
+      if (!result[0]) {
+        throw new Error(result[1]);
+      }
+      return result[1];
     },
+    toCBORType(value: T): CBORType {
+      const result = tryToCBORType(value);
+      if (!result[0]) {
+        throw new Error(result[1]);
+      }
+      return result[1];
+    },
+    tryFromCBORType,
+    tryToCBORType,
   };
 }

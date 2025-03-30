@@ -266,3 +266,100 @@ Deno.test("Test nested schema with multiple levels of error propagation", () => 
     "Error encoding nested CBOR: Error encoding nested CBOR: Inner schema encoding error",
   );
 });
+
+// Test nested schema with custom type throwing Error
+Deno.test("Test nested schema with custom type throwing Error", () => {
+  // Create a schema that will throw a custom error for specific values
+  const customErrorSchema: CBORSchemaType<string> = {
+    fromCBORType(data: CBORType): string {
+      if (data === "trigger-error") {
+        throw new Error("Custom error triggered in fromCBORType");
+      }
+      if (typeof data !== "string") {
+        throw new Error("Expected string");
+      }
+      return data;
+    },
+    toCBORType(value: string): CBORType {
+      if (value === "trigger-error") {
+        throw new Error("Custom error triggered in toCBORType");
+      }
+      return value;
+    },
+  };
+
+  const innerSchema = map([
+    field("field1", customErrorSchema),
+    field("field2", string),
+  ]);
+
+  const nestedSchema = nested(innerSchema);
+
+  // Test with error-triggering value in fromCBORType
+  const errorData = encodeCBOR(
+    new Map([
+      ["field1", "trigger-error"],
+      ["field2", "ok"],
+    ]),
+  );
+  assertThrows(
+    () => nestedSchema.fromCBORType(errorData),
+    Error,
+    "Error decoding nested CBOR: Error decoding field field1: Custom error triggered in fromCBORType",
+  );
+
+  // Test with error-triggering value in toCBORType
+  assertThrows(
+    () =>
+      nestedSchema.toCBORType({
+        field1: "trigger-error",
+        field2: "ok",
+      } as ExtractFieldType<typeof nestedSchema>),
+    Error,
+    "Error encoding nested CBOR: Error encoding field field1: Custom error triggered in toCBORType",
+  );
+});
+
+// Test nested schema with custom type success cases
+Deno.test("Test nested schema with custom type success cases", () => {
+  // Create a schema that transforms values but doesn't throw errors
+  const customTransformSchema: CBORSchemaType<string> = {
+    fromCBORType(data: CBORType): string {
+      if (typeof data !== "string") {
+        throw new Error("Expected string");
+      }
+      return data.toUpperCase(); // Transform to uppercase
+    },
+    toCBORType(value: string): CBORType {
+      return value.toLowerCase(); // Transform to lowercase
+    },
+  };
+
+  const innerSchema = map([
+    field("field1", customTransformSchema),
+    field("field2", string),
+  ]);
+
+  const nestedSchema = nested(innerSchema);
+
+  // Test successful fromCBORType with transformation
+  const inputData = encodeCBOR(
+    new Map([
+      ["field1", "hello"],
+      ["field2", "world"],
+    ]),
+  );
+  const decoded = nestedSchema.fromCBORType(inputData);
+  assertEquals(decoded.field1, "HELLO"); // Should be transformed to uppercase
+  assertEquals(decoded.field2, "world"); // Should remain unchanged
+
+  // Test successful toCBORType with transformation
+  const input = {
+    field1: "WORLD",
+    field2: "hello",
+  } as ExtractFieldType<typeof nestedSchema>;
+  const encoded = nestedSchema.toCBORType(input);
+  const roundTrip = nestedSchema.fromCBORType(encoded);
+  assertEquals(roundTrip.field1, "WORLD"); // Should be transformed to uppercase
+  assertEquals(roundTrip.field2, "hello"); // Should remain unchanged
+});

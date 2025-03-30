@@ -32,27 +32,82 @@ export function tagged<N extends number, V>(
   tagNumber: N,
   valueSchema: CBORSchemaType<V>,
 ): CBORSchemaType<CBORTypedTag<N, V>> {
-  return {
-    fromCBORType(data: CBORType): CBORTypedTag<N, V> {
-      if (!(data instanceof CBORTag)) {
-        throw new Error(`Expected CBORTag, got ${typeof data}`);
-      }
+  function tryFromCBORType(
+    data: CBORType,
+  ): [true, CBORTypedTag<N, V>] | [false, string] {
+    if (!(data instanceof CBORTag)) {
+      return [false, `Expected CBORTag, got ${typeof data}`];
+    }
 
-      if (data.tag !== tagNumber) {
-        throw new Error(`Expected tag ${tagNumber}, got ${data.tag}`);
-      }
+    if (data.tag !== tagNumber) {
+      return [false, `Expected tag ${tagNumber}, got ${data.tag}`];
+    }
 
-      return {
+    const valueResult = valueSchema.tryFromCBORType?.(data.value);
+    if (valueResult) {
+      if (!valueResult[0]) {
+        return [false, `Error decoding tagged value: ${valueResult[1]}`];
+      }
+      return [true, { tag: tagNumber, value: valueResult[1] }];
+    }
+
+    try {
+      return [true, {
         tag: tagNumber,
         value: valueSchema.fromCBORType(data.value),
-      };
+      }];
+    } catch (error) {
+      if (error instanceof Error) {
+        return [false, `Error decoding tagged value: ${error.message}`];
+      }
+      return [false, `Error decoding tagged value: ${error}`];
+    }
+  }
+
+  function tryToCBORType(
+    value: CBORTypedTag<N, V>,
+  ): [true, CBORType] | [false, string] {
+    if (value.tag !== tagNumber) {
+      return [false, `Expected tag ${tagNumber}, got ${value.tag}`];
+    }
+
+    const valueResult = valueSchema.tryToCBORType?.(value.value);
+    if (valueResult) {
+      if (!valueResult[0]) {
+        return [false, `Error encoding tagged value: ${valueResult[1]}`];
+      }
+      return [true, new CBORTag(tagNumber, valueResult[1])];
+    }
+
+    try {
+      return [
+        true,
+        new CBORTag(tagNumber, valueSchema.toCBORType(value.value)),
+      ];
+    } catch (error) {
+      if (error instanceof Error) {
+        return [false, `Error encoding tagged value: ${error.message}`];
+      }
+      return [false, `Error encoding tagged value: ${error}`];
+    }
+  }
+
+  return {
+    fromCBORType(data: CBORType): CBORTypedTag<N, V> {
+      const result = tryFromCBORType(data);
+      if (!result[0]) {
+        throw new Error(result[1]);
+      }
+      return result[1];
     },
     toCBORType(value: CBORTypedTag<N, V>): CBORType {
-      if (value.tag !== tagNumber) {
-        throw new Error(`Expected tag ${tagNumber}, got ${value.tag}`);
+      const result = tryToCBORType(value);
+      if (!result[0]) {
+        throw new Error(result[1]);
       }
-      const encodedValue = valueSchema.toCBORType(value.value);
-      return new CBORTag(tagNumber, encodedValue);
+      return result[1];
     },
+    tryFromCBORType,
+    tryToCBORType,
   };
 }

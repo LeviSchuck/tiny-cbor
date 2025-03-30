@@ -12,17 +12,38 @@ import type { CBORType } from "../cbor.ts";
  * const decoded = cs.fromCBOR(schema, encoded); // true
  * ```
  */
-export const boolean: CBORSchemaType<boolean> = {
+
+function tryFromCBORType(data: CBORType): [true, boolean] | [false, string] {
+  if (typeof data !== "boolean") {
+    return [false, `Expected boolean, got ${typeof data}`];
+  }
+  return [true, data];
+}
+
+function tryToCBORType(value: boolean): [true, CBORType] | [false, string] {
+  if (typeof value !== "boolean") {
+    return [false, `Expected boolean, got ${typeof value}`];
+  }
+  return [true, value];
+}
+
+const booleanSchema: CBORSchemaType<boolean> = {
   fromCBORType(data: CBORType): boolean {
-    if (typeof data !== "boolean") {
-      throw new Error(`Expected boolean, got ${typeof data}`);
+    const result = tryFromCBORType(data);
+    if (!result[0]) {
+      throw new Error(result[1]);
     }
-    return data;
+    return result[1];
   },
   toCBORType(value: boolean): CBORType {
-    if (typeof value !== "boolean") {
-      throw new Error(`Expected boolean, got ${typeof value}`);
+    const result = tryToCBORType(value);
+    if (!result[0]) {
+      throw new Error(result[1]);
     }
-    return value;
+    return result[1];
   },
+  tryFromCBORType,
+  tryToCBORType,
 };
+
+export const boolean = booleanSchema;

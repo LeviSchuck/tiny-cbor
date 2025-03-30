@@ -210,6 +210,48 @@ Deno.test({
   },
 });
 Deno.test({
+  name: "Can decode big integers",
+  fn() {
+    assertEquals(
+      decodeCBOR(
+        new Uint8Array([0x1b, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
+      ),
+      9007199254740992n,
+    );
+    assertEquals(
+      decodeCBOR(
+        new Uint8Array([0x3b, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
+      ),
+      -9007199254740993n,
+    );
+  },
+});
+Deno.test({
+  name: "Rejects byte strings with big integer lengths",
+  fn() {
+    // Try to decode a byte string with length 9007199254740992
+    assertThrows(() => {
+      decodeCBOR(
+        new Uint8Array([
+          0x5b, // byte string with length as 64-bit integer
+          0x00,
+          0x20,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00, // length 9007199254740992
+          0xAA,
+          0xBB,
+          0xCC,
+          0xDD, // some dummy bytes
+        ]),
+      );
+    }, "Byte string too long");
+  },
+});
+Deno.test({
   name: "Can decode empty strings",
   fn() {
     assertEquals(decodeCBOR(new Uint8Array([0x60])), "");

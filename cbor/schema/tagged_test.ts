@@ -3,6 +3,8 @@ import { type CBORTypedTag, tagged } from "./tagged.ts";
 import { string } from "./string.ts";
 import { CBORTag } from "../cbor.ts";
 import { assertEquals } from "jsr:@std/assert";
+import type { CBORType } from "../cbor.ts";
+import type { CBORSchemaType } from "./type.ts";
 
 // Type validation tests
 Deno.test("Tagged types with invalid inputs - fromCBORType", () => {
@@ -70,4 +72,123 @@ Deno.test("Tagged types with valid inputs", () => {
   const roundTrip = dateSchema.fromCBORType(dateSchema.toCBORType(taggedDate));
   assertEquals(roundTrip.tag, 0);
   assertEquals(roundTrip.value, dateStr);
+});
+
+// Test basic tag validation
+Deno.test("Test basic tag validation", () => {
+  const dateSchema = tagged(0, string);
+
+  // Should reject non-tagged values
+  assertThrows(
+    () => dateSchema.fromCBORType("not a tag"),
+    Error,
+    "Expected CBORTag, got string",
+  );
+
+  // Should reject wrong tag number
+  assertThrows(
+    () => dateSchema.fromCBORType(new CBORTag(1, "2024-01-01")),
+    Error,
+    "Expected tag 0, got 1",
+  );
+});
+
+// Test custom type throwing Error in tagged values
+Deno.test("Test custom type throwing Error in tagged values", () => {
+  // Create a schema that will throw a custom error for specific values
+  const customErrorSchema: CBORSchemaType<string> = {
+    fromCBORType(data: CBORType): string {
+      if (data === "trigger-error") {
+        throw new Error("Custom error triggered in fromCBORType");
+      }
+      if (typeof data !== "string") {
+        throw new Error("Expected string");
+      }
+      return data;
+    },
+    toCBORType(value: string): CBORType {
+      if (value === "trigger-error") {
+        throw new Error("Custom error triggered in toCBORType");
+      }
+      return value;
+    },
+  };
+
+  const taggedSchema = tagged(42, customErrorSchema);
+
+  // Test with tagged value containing error-triggering value in fromCBORType
+  assertThrows(
+    () => taggedSchema.fromCBORType(new CBORTag(42, "trigger-error")),
+    Error,
+    "Error decoding tagged value: Custom error triggered in fromCBORType",
+  );
+
+  // Test with tagged value containing error-triggering value in toCBORType
+  assertThrows(
+    () => taggedSchema.toCBORType({ tag: 42, value: "trigger-error" }),
+    Error,
+    "Error encoding tagged value: Custom error triggered in toCBORType",
+  );
+
+  // Test with wrong tag number in toCBORType
+  assertThrows(
+    () => taggedSchema.toCBORType({ tag: 43 as 42, value: "ok" }),
+    Error,
+    "Expected tag 42, got 43",
+  );
+});
+
+// Test custom type throwing non-Error in tagged values
+Deno.test("Test custom type throwing non-Error in tagged values", () => {
+  // Create a schema that throws non-Error objects
+  const nonErrorSchema: CBORSchemaType<string> = {
+    fromCBORType(data: CBORType): string {
+      if (data === "throw-string") {
+        throw "String error in fromCBORType";
+      }
+      if (data === "throw-object") {
+        throw { reason: "Custom object error in fromCBORType" };
+      }
+      return String(data);
+    },
+    toCBORType(value: string): CBORType {
+      if (value === "throw-string-encode") {
+        throw "String error in toCBORType";
+      }
+      if (value === "throw-object-encode") {
+        throw { reason: "Custom object error in toCBORType" };
+      }
+      return value;
+    },
+  };
+
+  const taggedSchema = tagged(42, nonErrorSchema);
+
+  // Test string throw in fromCBORType
+  assertThrows(
+    () => taggedSchema.fromCBORType(new CBORTag(42, "throw-string")),
+    Error,
+    "Error decoding tagged value: String error in fromCBORType",
+  );
+
+  // Test object throw in fromCBORType
+  assertThrows(
+    () => taggedSchema.fromCBORType(new CBORTag(42, "throw-object")),
+    Error,
+    "Error decoding tagged value: [object Object]",
+  );
+
+  // Test string throw in toCBORType
+  assertThrows(
+    () => taggedSchema.toCBORType({ tag: 42, value: "throw-string-encode" }),
+    Error,
+    "Error encoding tagged value: String error in toCBORType",
+  );
+
+  // Test object throw in toCBORType
+  assertThrows(
+    () => taggedSchema.toCBORType({ tag: 42, value: "throw-object-encode" }),
+    Error,
+    "Error encoding tagged value: [object Object]",
+  );
 });

@@ -243,49 +243,49 @@ Deno.test("Empty union schema throws errors", () => {
   assertThrows(
     () => emptyUnionSchema.fromCBORType("string"),
     Error,
-    "Failed to decode union value",
+    "Value doesn't match any schema in union",
   );
 
   assertThrows(
     () => emptyUnionSchema.fromCBORType(42),
     Error,
-    "Failed to decode union value",
+    "Value doesn't match any schema in union",
   );
 
   assertThrows(
     () => emptyUnionSchema.fromCBORType(true),
     Error,
-    "Failed to decode union value",
+    "Value doesn't match any schema in union",
   );
 
   assertThrows(
     () => emptyUnionSchema.fromCBORType([]),
     Error,
-    "Failed to decode union value",
+    "Value doesn't match any schema in union",
   );
 
   // Test toCBORType with various inputs
   assertThrows(
     () => emptyUnionSchema.toCBORType("string" as unknown),
     Error,
-    "Failed to encode union value",
+    "Value doesn't match any schema in union for encoding",
   );
 
   assertThrows(
     () => emptyUnionSchema.toCBORType(42 as unknown),
     Error,
-    "Failed to encode union value",
+    "Value doesn't match any schema in union for encoding",
   );
 
   assertThrows(
     () => emptyUnionSchema.toCBORType(true as unknown),
     Error,
-    "Failed to encode union value",
+    "Value doesn't match any schema in union for encoding",
   );
 
   assertThrows(
     () => emptyUnionSchema.toCBORType([] as unknown),
     Error,
-    "Failed to encode union value",
+    "Value doesn't match any schema in union for encoding",
   );
 });

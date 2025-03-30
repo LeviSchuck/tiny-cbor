@@ -12,17 +12,38 @@ import type { CBORType } from "../cbor.ts";
  * const decoded = cs.fromCBOR(schema, encoded); // BigInt("9007199254740992")
  * ```
  */
-export const bigint: CBORSchemaType<bigint> = {
+
+function tryFromCBORType(data: CBORType): [true, bigint] | [false, string] {
+  if (typeof data !== "bigint") {
+    return [false, `Expected bigint, got ${data}`];
+  }
+  return [true, data];
+}
+
+function tryToCBORType(value: bigint): [true, CBORType] | [false, string] {
+  if (typeof value !== "bigint") {
+    return [false, `Value ${value} is not a valid bigint`];
+  }
+  return [true, value];
+}
+
+const bigintSchema: CBORSchemaType<bigint> = {
   fromCBORType(data: CBORType): bigint {
-    if (typeof data !== "bigint") {
-      throw new Error(`Expected bigint, got ${data}`);
+    const result = tryFromCBORType(data);
+    if (!result[0]) {
+      throw new Error(result[1]);
     }
-    return data;
+    return result[1];
   },
   toCBORType(value: bigint): CBORType {
-    if (typeof value !== "bigint") {
-      throw new Error(`Value ${value} is not a valid bigint`);
+    const result = tryToCBORType(value);
+    if (!result[0]) {
+      throw new Error(result[1]);
     }
-    return value;
+    return result[1];
   },
+  tryFromCBORType,
+  tryToCBORType,
 };
+
+export const bigint = bigintSchema;

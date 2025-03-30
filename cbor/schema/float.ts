@@ -12,17 +12,38 @@ import type { CBORType } from "../cbor.ts";
  * const decoded = cs.fromCBOR(schema, encoded); // 3.14
  * ```
  */
-export const float: CBORSchemaType<number> = {
+
+function tryFromCBORType(data: CBORType): [true, number] | [false, string] {
+  if (typeof data !== "number") {
+    return [false, `Expected number, got ${typeof data}`];
+  }
+  return [true, data];
+}
+
+function tryToCBORType(value: number): [true, CBORType] | [false, string] {
+  if (typeof value !== "number") {
+    return [false, `Expected number, got ${typeof value}`];
+  }
+  return [true, value];
+}
+
+const floatSchema: CBORSchemaType<number> = {
   fromCBORType(data: CBORType): number {
-    if (typeof data !== "number") {
-      throw new Error(`Expected number, got ${typeof data}`);
+    const result = tryFromCBORType(data);
+    if (!result[0]) {
+      throw new Error(result[1]);
     }
-    return data;
+    return result[1];
   },
   toCBORType(value: number): CBORType {
-    if (typeof value !== "number") {
-      throw new Error(`Expected number, got ${typeof value}`);
+    const result = tryToCBORType(value);
+    if (!result[0]) {
+      throw new Error(result[1]);
     }
-    return value;
+    return result[1];
   },
+  tryFromCBORType,
+  tryToCBORType,
 };
+
+export const float = floatSchema;

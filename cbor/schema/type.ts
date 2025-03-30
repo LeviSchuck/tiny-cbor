@@ -13,7 +13,17 @@ import type { CBORType } from "../cbor.ts";
  *     if (typeof data !== "string") throw new Error("Not a string");
  *     return data;
  *   },
- *   toCBORType: (value) => value
+ *   toCBORType: (value) => value,
+ *   // Optional tryFromCBORType implementation
+ *   tryFromCBORType: (data) => {
+ *     if (typeof data !== "string") return [false, "Not a string"];
+ *     return [true, data];
+ *   },
+ *   // Optional tryToCBORType implementation
+ *   tryToCBORType: (value) => {
+ *     if (typeof value !== "string") return [false, "Not a string"];
+ *     return [true, value];
+ *   }
  * };
  * ```
  */
@@ -21,6 +31,8 @@ export interface CBORSchemaType<T> {
   fromCBORType(data: CBORType): T;
   toCBORType(value: T): CBORType;
   isOptional?: true;
+  tryFromCBORType?(data: CBORType): [true, T] | [false, string];
+  tryToCBORType?(value: T): [true, CBORType] | [false, string];
 }
 
 /**

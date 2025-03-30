@@ -20,19 +20,73 @@ import type { CBORType } from "../cbor.ts";
 export function optional<T>(
   schema: CBORSchemaType<T>,
 ): CBORSchemaType<T | undefined> {
+  function tryFromCBORType(
+    data: CBORType,
+  ): [true, T | undefined] | [false, string] {
+    if (data === undefined || data === null) {
+      return [true, undefined];
+    }
+
+    const result = schema.tryFromCBORType?.(data);
+    if (result) {
+      if (!result[0]) {
+        return [false, `Error decoding optional value: ${result[1]}`];
+      }
+      return [true, result[1]];
+    }
+
+    try {
+      return [true, schema.fromCBORType(data)];
+    } catch (error) {
+      if (error instanceof Error) {
+        return [false, `Error decoding optional value: ${error.message}`];
+      }
+      return [false, `Error decoding optional value: ${error}`];
+    }
+  }
+
+  function tryToCBORType(
+    value: T | undefined,
+  ): [true, CBORType] | [false, string] {
+    if (value === undefined) {
+      return [true, undefined];
+    }
+
+    const result = schema.tryToCBORType?.(value);
+    if (result) {
+      if (!result[0]) {
+        return [false, `Error encoding optional value: ${result[1]}`];
+      }
+      return [true, result[1]];
+    }
+
+    try {
+      return [true, schema.toCBORType(value)];
+    } catch (error) {
+      if (error instanceof Error) {
+        return [false, `Error encoding optional value: ${error.message}`];
+      }
+      return [false, `Error encoding optional value: ${error}`];
+    }
+  }
+
   return {
     fromCBORType(data: CBORType): T | undefined {
-      if (data === undefined || data === null) {
-        return undefined;
+      const result = tryFromCBORType(data);
+      if (!result[0]) {
+        throw new Error(result[1]);
       }
-      return schema.fromCBORType(data);
+      return result[1];
     },
     toCBORType(value: T | undefined): CBORType {
-      if (value === undefined) {
-        return undefined;
+      const result = tryToCBORType(value);
+      if (!result[0]) {
+        throw new Error(result[1]);
       }
-      return schema.toCBORType(value);
+      return result[1];
     },
     isOptional: true,
+    tryFromCBORType,
+    tryToCBORType,
   };
 }

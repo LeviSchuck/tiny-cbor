@@ -13,17 +13,38 @@ import type { CBORType } from "../cbor.ts";
  * const decoded = cs.fromCBOR(schema, encoded); // Uint8Array [1, 2, 3]
  * ```
  */
-export const bytes: CBORSchemaType<Uint8Array> = {
+
+function tryFromCBORType(data: CBORType): [true, Uint8Array] | [false, string] {
+  if (!(data instanceof Uint8Array)) {
+    return [false, `Expected Uint8Array, got ${typeof data}`];
+  }
+  return [true, data];
+}
+
+function tryToCBORType(value: Uint8Array): [true, CBORType] | [false, string] {
+  if (!(value instanceof Uint8Array)) {
+    return [false, `Expected Uint8Array, got ${typeof value}`];
+  }
+  return [true, value];
+}
+
+const bytesSchema: CBORSchemaType<Uint8Array> = {
   fromCBORType(data: CBORType): Uint8Array {
-    if (!(data instanceof Uint8Array)) {
-      throw new Error(`Expected Uint8Array, got ${typeof data}`);
+    const result = tryFromCBORType(data);
+    if (!result[0]) {
+      throw new Error(result[1]);
     }
-    return data;
+    return result[1];
   },
   toCBORType(value: Uint8Array): CBORType {
-    if (!(value instanceof Uint8Array)) {
-      throw new Error(`Expected Uint8Array, got ${typeof value}`);
+    const result = tryToCBORType(value);
+    if (!result[0]) {
+      throw new Error(result[1]);
     }
-    return value;
+    return result[1];
   },
+  tryFromCBORType,
+  tryToCBORType,
 };
+
+export const bytes = bytesSchema;

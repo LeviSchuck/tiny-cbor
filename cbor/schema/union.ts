@@ -25,50 +25,100 @@ export function union<Schemas extends CBORSchemaType<unknown>[]>(
 ): CBORSchemaType<
   Schemas[number] extends CBORSchemaType<infer T> ? T : never
 > {
+  function tryFromCBORType(
+    data: CBORType,
+  ): [true, Schemas[number] extends CBORSchemaType<infer T> ? T : never] | [
+    false,
+    string,
+  ] {
+    for (let i = 0; i < schemas.length; i++) {
+      const schemaResult = schemas[i].tryFromCBORType?.(data);
+      if (schemaResult) {
+        if (schemaResult[0]) {
+          return [
+            true,
+            schemaResult[1] as Schemas[number] extends CBORSchemaType<infer T>
+              ? T
+              : never,
+          ];
+        }
+      } else {
+        try {
+          return [
+            true,
+            schemas[i].fromCBORType(data) as Schemas[number] extends
+              CBORSchemaType<infer T> ? T : never,
+          ];
+        } catch (error) {
+          if (i === schemas.length - 1) {
+            if (error instanceof Error) {
+              return [
+                false,
+                `Value doesn't match any schema in union: ${error.message}`,
+              ];
+            }
+            return [false, `Value doesn't match any schema in union: ${error}`];
+          }
+        }
+      }
+    }
+    return [false, "Value doesn't match any schema in union (which is empty)"];
+  }
+
+  function tryToCBORType(
+    value: Schemas[number] extends CBORSchemaType<infer T> ? T : never,
+  ): [true, CBORType] | [false, string] {
+    for (let i = 0; i < schemas.length; i++) {
+      const schemaResult = schemas[i].tryToCBORType?.(value as CBORType);
+      if (schemaResult) {
+        if (schemaResult[0]) {
+          return [true, schemaResult[1]];
+        }
+      } else {
+        try {
+          return [true, schemas[i].toCBORType(value as CBORType)];
+        } catch (error) {
+          if (i === schemas.length - 1) {
+            if (error instanceof Error) {
+              return [
+                false,
+                `Value doesn't match any schema in union for encoding: ${error.message}`,
+              ];
+            }
+            return [
+              false,
+              `Value doesn't match any schema in union for encoding: ${error}`,
+            ];
+          }
+        }
+      }
+    }
+    return [
+      false,
+      "Value doesn't match any schema in union for encoding (which is empty)",
+    ];
+  }
+
   return {
     fromCBORType(
       data: CBORType,
     ): Schemas[number] extends CBORSchemaType<infer T> ? T : never {
-      for (let i = 0; i < schemas.length; i++) {
-        try {
-          return schemas[i].fromCBORType(data) as Schemas[number] extends
-            CBORSchemaType<infer T> ? T : never;
-        } catch (error) {
-          if (i === schemas.length - 1) {
-            if (error instanceof Error) {
-              throw new Error(
-                `Value doesn't match any schema in union: ${error.message}`,
-              );
-            }
-            throw new Error(
-              `Value doesn't match any schema in union: ${error}`,
-            );
-          }
-        }
+      const result = tryFromCBORType(data);
+      if (!result[0]) {
+        throw new Error(result[1]);
       }
-      throw new Error("Failed to decode union value");
+      return result[1];
     },
     toCBORType(
       value: Schemas[number] extends CBORSchemaType<infer T> ? T : never,
     ): CBORType {
-      for (let i = 0; i < schemas.length; i++) {
-        try {
-          return schemas[i].toCBORType(value as CBORType);
-        } catch (error) {
-          if (i === schemas.length - 1) {
-            if (error instanceof Error) {
-              throw new Error(
-                `Value doesn't match any schema in union for encoding: ${error.message}`,
-              );
-            }
-            throw new Error(
-              `Value doesn't match any schema in union for encoding: ${error}`,
-            );
-          }
-        }
+      const result = tryToCBORType(value);
+      if (!result[0]) {
+        throw new Error(result[1]);
       }
-
-      throw new Error("Failed to encode union value");
+      return result[1];
     },
+    tryFromCBORType,
+    tryToCBORType,
   };
 }

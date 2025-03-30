@@ -30,38 +30,63 @@ import { decodeCBOR, encodeCBOR } from "../cbor.ts";
  * ```
  */
 export function nested<T>(innerSchema: CBORSchemaType<T>): CBORSchemaType<T> {
+  function tryFromCBORType(data: CBORType): [true, T] | [false, string] {
+    if (!(data instanceof Uint8Array)) {
+      return [false, `Expected Uint8Array for nested CBOR, got ${typeof data}`];
+    }
+
+    try {
+      const innerData = decodeCBOR(data);
+      const result = innerSchema.tryFromCBORType?.(innerData);
+      if (result) {
+        if (!result[0]) {
+          return [false, `Error decoding nested CBOR: ${result[1]}`];
+        }
+        return [true, result[1]];
+      }
+      return [true, innerSchema.fromCBORType(innerData)];
+    } catch (error) {
+      if (error instanceof Error) {
+        return [false, `Error decoding nested CBOR: ${error.message}`];
+      }
+      return [false, `Error decoding nested CBOR: ${error}`];
+    }
+  }
+
+  function tryToCBORType(value: T): [true, CBORType] | [false, string] {
+    try {
+      const innerResult = innerSchema.tryToCBORType?.(value);
+      if (innerResult) {
+        if (!innerResult[0]) {
+          return [false, `Error encoding nested CBOR: ${innerResult[1]}`];
+        }
+        return [true, encodeCBOR(innerResult[1])];
+      }
+      return [true, encodeCBOR(innerSchema.toCBORType(value))];
+    } catch (error) {
+      if (error instanceof Error) {
+        return [false, `Error encoding nested CBOR: ${error.message}`];
+      }
+      return [false, `Error encoding nested CBOR: ${error}`];
+    }
+  }
+
   return {
     fromCBORType(data: CBORType): T {
-      if (!(data instanceof Uint8Array)) {
-        throw new Error(
-          `Expected Uint8Array for nested CBOR, got ${typeof data}`,
-        );
+      const result = tryFromCBORType(data);
+      if (!result[0]) {
+        throw new Error(result[1]);
       }
-
-      try {
-        const innerData = decodeCBOR(data);
-        return innerSchema.fromCBORType(innerData);
-      } catch (error) {
-        if (error instanceof Error) {
-          throw new Error(
-            `Error decoding nested CBOR: ${error.message}`,
-          );
-        }
-        throw new Error(`Error decoding nested CBOR: ${error}`);
-      }
+      return result[1];
     },
     toCBORType(value: T): CBORType {
-      try {
-        const innerEncoded = innerSchema.toCBORType(value);
-        return encodeCBOR(innerEncoded);
-      } catch (error) {
-        if (error instanceof Error) {
-          throw new Error(
-            `Error encoding nested CBOR: ${error.message}`,
-          );
-        }
-        throw new Error(`Error encoding nested CBOR: ${error}`);
+      const result = tryToCBORType(value);
+      if (!result[0]) {
+        throw new Error(result[1]);
       }
+      return result[1];
     },
+    tryFromCBORType,
+    tryToCBORType,
   };
 }

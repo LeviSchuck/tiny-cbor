@@ -39,6 +39,10 @@ Deno.test({
       1000000000000,
       9,
     ]);
+    assertEquals(decodeLength(toView(decodeHex("1b0020000000000000")), 27, 0), [
+      9007199254740992n,
+      9,
+    ]);
   },
 });
 

@@ -213,3 +213,57 @@ Deno.test("Test map schema with non-Error throws", () => {
     "Error encoding field field1: [object Object]",
   );
 });
+
+// Test map schema with custom type throwing Error
+Deno.test("Test map schema with custom type throwing Error", () => {
+  // Create a schema that will throw a custom error for specific values
+  const customErrorSchema: CBORSchemaType<string> = {
+    fromCBORType(data: CBORType): string {
+      if (data === "trigger-error") {
+        throw new Error("Custom error triggered in fromCBORType");
+      }
+      if (typeof data !== "string") {
+        throw new Error("Expected string");
+      }
+      return data;
+    },
+    toCBORType(value: string): CBORType {
+      if (value === "trigger-error") {
+        throw new Error("Custom error triggered in toCBORType");
+      }
+      return value;
+    },
+  };
+
+  const mapSchema = map([
+    field("field1", string),
+    field("field2", customErrorSchema),
+    field("field3", string),
+  ]);
+
+  // Test with map containing error-triggering value in fromCBORType
+  assertThrows(
+    () =>
+      mapSchema.fromCBORType(
+        new Map([
+          ["field1", "ok"],
+          ["field2", "trigger-error"],
+          ["field3", "good"],
+        ]),
+      ),
+    Error,
+    "Error decoding field field2: Custom error triggered in fromCBORType",
+  );
+
+  // Test with map containing error-triggering value in toCBORType
+  assertThrows(
+    () =>
+      mapSchema.toCBORType({
+        field1: "ok",
+        field2: "trigger-error",
+        field3: "good",
+      } as ExtractFieldType<typeof mapSchema>),
+    Error,
+    "Error encoding field field2: Custom error triggered in toCBORType",
+  );
+});
