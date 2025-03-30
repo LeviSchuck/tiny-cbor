@@ -7,7 +7,8 @@
   },
   "lint": {
     "exclude": [
-      "npm"
+      "npm",
+      "docs"
     ]
   },
   "fmt": {
@@ -15,7 +16,8 @@
       "npm",
       "CHANGELOG.md",
       ".github",
-      ".vscode"
+      ".vscode",
+      "docs"
     ]
   },
   "test": {

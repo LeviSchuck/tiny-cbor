@@ -1,7 +1,10 @@
 import type {
   CBORSchemaType,
+  Expand,
+  ExtendableMapSchema,
   ExtractFieldType,
   FieldDefinition,
+  MakeOptional,
   MapSchemaType,
 } from "./type.ts";
 import type { CBORType } from "../cbor.ts";
@@ -33,7 +36,7 @@ import type { CBORType } from "../cbor.ts";
  */
 export function map<Fields extends FieldDefinition<unknown, string>[]>(
   fields: Fields,
-): CBORSchemaType<MapSchemaType<Fields>> {
+): ExtendableMapSchema<MapSchemaType<Fields>> {
   function tryFromCBORType(
     data: CBORType,
   ): [true, MapSchemaType<Fields>] | [false, string] {
@@ -61,7 +64,9 @@ export function map<Fields extends FieldDefinition<unknown, string>[]>(
             `Error decoding field ${field.jsKey}: ${itemResult[1]}`,
           ];
         }
-        (result as Record<string, unknown>)[field.jsKey] = itemResult[1];
+        if (itemResult[1] !== undefined || !field.schema.isOptional) {
+          (result as Record<string, unknown>)[field.jsKey] = itemResult[1];
+        }
       } else {
         try {
           (result as Record<string, unknown>)[field.jsKey] = field.schema
@@ -132,7 +137,7 @@ export function map<Fields extends FieldDefinition<unknown, string>[]>(
     return [true, map];
   }
 
-  return {
+  const schema = {
     fromCBORType(data: CBORType): MapSchemaType<Fields> {
       const result = tryFromCBORType(data);
       if (!result[0]) {
@@ -149,7 +154,17 @@ export function map<Fields extends FieldDefinition<unknown, string>[]>(
     },
     tryFromCBORType,
     tryToCBORType,
+    extend<NewFields extends FieldDefinition<unknown, string>[]>(
+      newFields: NewFields,
+    ) {
+      // Things are too complicated so it gets the unknown swap-around
+      return map([...fields, ...newFields]) as unknown as ExtendableMapSchema<
+        MakeOptional<Expand<MapSchemaType<Fields> & MapSchemaType<NewFields>>>
+      >;
+    },
   };
+
+  return schema;
 }
 
 /**

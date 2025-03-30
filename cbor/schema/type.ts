@@ -81,29 +81,54 @@ export interface FieldDefinition<T, K extends string> {
 }
 
 /**
- * Type helper that extracts the value type from a FieldDefinition
+ * Type helper that extracts the value type from a field definition
  */
 export type ExtractFieldType<F> = F extends FieldDefinition<infer T, string> ? T
   : never;
 
-/**
- * Type helper that extracts the JavaScript property key from a FieldDefinition
- */
-type ExtractJsKey<F> = F extends FieldDefinition<unknown, infer K> ? K : never;
-
-type Expand<T> = T extends (...args: infer A) => infer R
+export type Expand<T> = T extends (...args: infer A) => infer R
   ? (...args: Expand<A>) => Expand<R>
   : T extends object ? { [K in keyof T]: T[K] }
   : T;
 
 /**
- * Type helper that constructs a TypeScript type from an array of field definitions
+ * Type helper that makes properties optional if their type is T | undefined
+ */
+type OptionalKeys<T> = {
+  [K in keyof T as undefined extends T[K] ? K : never]: T[K];
+};
+
+type RequiredKeys<T> = {
+  [K in keyof T as undefined extends T[K] ? never : K]: T[K];
+};
+
+export type MakeOptional<T> = Expand<
+  Partial<OptionalKeys<T>> & RequiredKeys<T>
+>;
+
+/**
+ * Type helper that constructs a TypeScript object type from an array of field definitions
  */
 export type MapSchemaType<Fields extends FieldDefinition<unknown, string>[]> =
-  Expand<
+  MakeOptional<
     {
-      [K in ExtractJsKey<Fields[number]>]: ExtractFieldType<
+      [K in Fields[number]["jsKey"]]: ExtractFieldType<
         Extract<Fields[number], { jsKey: K }>
-      >;
+      > extends infer T
+        ? Extract<Fields[number], { jsKey: K }>["schema"] extends
+          { isOptional: true } ? T | undefined
+        : T
+        : never;
     }
   >;
+
+/**
+ * Interface for map schemas that support extension
+ */
+export interface ExtendableMapSchema<T> extends CBORSchemaType<T> {
+  extend: <NewFields extends FieldDefinition<unknown, string>[]>(
+    newFields: NewFields,
+  ) => ExtendableMapSchema<
+    MakeOptional<Expand<T & MapSchemaType<NewFields>>>
+  >;
+}

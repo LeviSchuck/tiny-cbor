@@ -13,7 +13,28 @@ import { field, map, numberField } from "./schema/map.ts";
 import { nested } from "./schema/nested.ts";
 import { bigint } from "./schema/bigint.ts";
 import { literal } from "./schema/literal.ts";
-import type { CBORSchemaType, FieldDefinition } from "./schema/type.ts";
+import type {
+  CBORSchemaType,
+  CBORSchemaValue,
+  FieldDefinition,
+} from "./schema/type.ts";
+
+/**
+ * Infers the TypeScript type from a CBOR schema, an alias of CBORSchemaValue
+ *
+ * @template T The schema type to infer from
+ * @example
+ * ```typescript
+ * const personSchema = cs.map([
+ *   cs.field("name", cs.string),
+ *   cs.field("age", cs.integer)
+ * ]);
+ *
+ * type Person = infer<typeof personSchema>;
+ * // Person = { name: string; age: number }
+ * ```
+ */
+export type infer<T> = CBORSchemaValue<T>;
 
 /**
  * Main schema builder class containing all schema constructors and primitive types.

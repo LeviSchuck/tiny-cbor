@@ -7,7 +7,7 @@ import { optional } from "./optional.ts";
 import { assertEquals } from "jsr:@std/assert";
 import type { ExtractFieldType } from "./type.ts";
 import type { CBORType } from "../cbor.ts";
-import type { CBORSchemaType } from "./type.ts";
+import type { CBORSchemaType, CBORSchemaValue } from "./type.ts";
 
 // Type validation tests
 Deno.test("Map types with invalid inputs - fromCBORType", () => {
@@ -265,5 +265,129 @@ Deno.test("Test map schema with custom type throwing Error", () => {
       } as ExtractFieldType<typeof mapSchema>),
     Error,
     "Error encoding field field2: Custom error triggered in toCBORType",
+  );
+});
+
+// Test map schema extension functionality
+Deno.test("Map schema extension", () => {
+  // Base schema
+  const personSchema = map([
+    field("name", string),
+    field("age", integer),
+    field("optional", optional(string)),
+  ]);
+
+  // Extended schema with additional fields
+  const employeeSchema = personSchema.extend([
+    field("department", string),
+    field("salary", float),
+  ]);
+
+  // Test that both base and extended schemas work correctly
+  const person = {
+    name: "Alice",
+    age: 30,
+  } as CBORSchemaValue<typeof personSchema>;
+
+  const employee = {
+    name: "Bob",
+    age: 35,
+    department: "Engineering",
+    salary: 100000.50,
+  } as CBORSchemaValue<typeof employeeSchema>;
+
+  // Test base schema still works
+  const encodedPerson = personSchema.toCBORType(person);
+  const decodedPerson = personSchema.fromCBORType(encodedPerson);
+  assertEquals(decodedPerson, person);
+
+  // Test extended schema with all fields
+  const encodedEmployee = employeeSchema.toCBORType(employee);
+  const decodedEmployee = employeeSchema.fromCBORType(encodedEmployee);
+  assertEquals(decodedEmployee, employee);
+
+  // Test that extended schema validates all fields
+  assertThrows(
+    () =>
+      employeeSchema.toCBORType({
+        name: "Charlie",
+        age: 40,
+        // Missing department and salary
+      } as ExtractFieldType<typeof employeeSchema>),
+    Error,
+    "Missing required field: department",
+  );
+
+  // Test multiple extensions
+  const contractorSchema = employeeSchema.extend([
+    field("contractEndDate", string),
+    field("hourlyRate", float),
+  ]);
+
+  const contractor = {
+    name: "Dave",
+    age: 45,
+    department: "IT",
+    salary: 120000.75,
+    contractEndDate: "2024-12-31",
+    hourlyRate: 75.50,
+  } as CBORSchemaValue<typeof contractorSchema>;
+
+  const encodedContractor = contractorSchema.toCBORType(contractor);
+  const decodedContractor = contractorSchema.fromCBORType(encodedContractor);
+  assertEquals(decodedContractor, contractor);
+
+  // Test that original schemas are not affected
+  assertEquals(personSchema.fromCBORType(encodedPerson), person);
+  assertEquals(employeeSchema.fromCBORType(encodedEmployee), employee);
+
+  // Test extending with optional fields
+  const extendedWithOptional = personSchema.extend([
+    field("email", optional(string)),
+    field("phone", optional(string)),
+  ]);
+
+  // Test with some optional fields
+  const personWithEmail = {
+    name: "Eve",
+    age: 28,
+    email: "eve@example.com",
+  };
+
+  const encodedWithEmail = extendedWithOptional.toCBORType(personWithEmail);
+  assertEquals(
+    extendedWithOptional.fromCBORType(encodedWithEmail),
+    personWithEmail,
+  );
+
+  // Test with all optional fields
+  const personWithAllOptional = {
+    name: "Grace",
+    age: 32,
+    email: "grace@example.com",
+    phone: "+1234567890",
+    optional: "optional",
+  } as CBORSchemaValue<typeof extendedWithOptional>;
+
+  const encodedWithAllOptional = extendedWithOptional.toCBORType(
+    personWithAllOptional,
+  );
+  assertEquals(
+    extendedWithOptional.fromCBORType(encodedWithAllOptional),
+    personWithAllOptional,
+  );
+
+  // Test with no optional fields
+  const personWithoutOptional = {
+    name: "Frank",
+    age: 32,
+  } as CBORSchemaValue<typeof extendedWithOptional>;
+
+  const encodedWithoutOptional = extendedWithOptional.toCBORType(
+    personWithoutOptional,
+  );
+  assertEquals(
+    extendedWithOptional.fromCBORType(encodedWithoutOptional),
+    personWithoutOptional,
   );
 });
