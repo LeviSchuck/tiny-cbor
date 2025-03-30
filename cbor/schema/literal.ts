@@ -15,7 +15,9 @@ import type { CBORType } from "../cbor.ts";
  * const decoded = cs.fromCBOR(schema, encoded); // "hello"
  * ```
  */
-export function literal<T extends string | number | bigint | boolean | Uint8Array>(
+export function literal<
+  T extends string | number | bigint | boolean | Uint8Array,
+>(
   value: T,
 ): CBORSchemaType<T> {
   function tryFromCBORType(data: CBORType): [true, T] | [false, string] {
@@ -29,7 +31,10 @@ export function literal<T extends string | number | bigint | boolean | Uint8Arra
         return [false, `Expected ${typeof value}, got Uint8Array`];
       }
       if (data.length !== value.length) {
-        return [false, `Expected Uint8Array of length ${value.length}, got ${data.length}`];
+        return [
+          false,
+          `Expected Uint8Array of length ${value.length}, got ${data.length}`,
+        ];
       }
       for (let i = 0; i < data.length; i++) {
         if (data[i] !== value[i]) {
@@ -61,7 +66,10 @@ export function literal<T extends string | number | bigint | boolean | Uint8Arra
         return [false, `Expected ${typeof value}, got Uint8Array`];
       }
       if (inputValue.length !== value.length) {
-        return [false, `Expected Uint8Array of length ${value.length}, got ${inputValue.length}`];
+        return [
+          false,
+          `Expected Uint8Array of length ${value.length}, got ${inputValue.length}`,
+        ];
       }
       for (let i = 0; i < inputValue.length; i++) {
         if (inputValue[i] !== value[i]) {
@@ -100,4 +108,4 @@ export function literal<T extends string | number | bigint | boolean | Uint8Arra
     tryFromCBORType,
     tryToCBORType,
   };
-} 
+}

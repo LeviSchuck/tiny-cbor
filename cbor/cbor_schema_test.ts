@@ -439,7 +439,10 @@ Deno.test("Test union of maps with literal discriminators", () => {
   // Test invalid list with wrong value type
   const invalidValueList = [
     { key: 1 as const, value: "hello" },
-    { key: 2 as const, value: "not-a-number" } as unknown as { key: 2; value: number }, // Wrong value type for number map
+    { key: 2 as const, value: "not-a-number" } as unknown as {
+      key: 2;
+      value: number;
+    }, // Wrong value type for number map
   ];
 
   assertThrows(

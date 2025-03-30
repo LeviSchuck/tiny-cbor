@@ -169,6 +169,46 @@ const encodedWebAuthnRegistration = WebAuthnRegistrationSchema.toCBORType(
   webAuthnRegistrationValue,
 );
 
+// Literal Schema
+const StringLiteralSchema = cs.literal("hello");
+const NumberLiteralSchema = cs.literal(42);
+const BooleanLiteralSchema = cs.literal(true);
+const BigIntLiteralSchema = cs.literal(BigInt(42));
+const BytesLiteralSchema = cs.literal(HELLO_WORLD_AS_BYTES);
+
+const stringLiteralValue = "hello";
+const numberLiteralValue = 42;
+const booleanLiteralValue = true;
+const bigIntLiteralValue = BigInt(42);
+const bytesLiteralValue = HELLO_WORLD_AS_BYTES;
+
+const encodedStringLiteral = StringLiteralSchema.toCBORType(stringLiteralValue);
+const encodedNumberLiteral = NumberLiteralSchema.toCBORType(numberLiteralValue);
+const encodedBooleanLiteral = BooleanLiteralSchema.toCBORType(
+  booleanLiteralValue,
+);
+const encodedBigIntLiteral = BigIntLiteralSchema.toCBORType(bigIntLiteralValue);
+const encodedBytesLiteral = BytesLiteralSchema.toCBORType(bytesLiteralValue);
+
+// Union of Tuples with Literal Discriminators Schema
+const TupleWithLiteralUnionSchema = cs.union([
+  cs.tuple([cs.literal(1), cs.string]),
+  cs.tuple([cs.literal(2), cs.integer]),
+  cs.tuple([cs.literal(3), cs.boolean]),
+]);
+
+const tupleWithLiteralListSchema = cs.array(TupleWithLiteralUnionSchema);
+
+const tupleWithLiteralListValue = [
+  [1, "hello"] as [1, string],
+  [2, 42] as [2, number],
+  [3, true] as [3, boolean],
+];
+
+const encodedTupleWithLiteralList = tupleWithLiteralListSchema.toCBORType(
+  tupleWithLiteralListValue,
+);
+
 // ==================== Benchmarks ====================
 
 // String Benchmarks
@@ -438,6 +478,96 @@ Deno.bench({
   fn() {
     const _encoded = WebAuthnRegistrationSchema.toCBORType(
       webAuthnRegistrationValue,
+    );
+  },
+});
+
+// Literal Benchmarks
+Deno.bench({
+  name: "String Literal - From CBORType",
+  fn() {
+    const _value = StringLiteralSchema.fromCBORType(encodedStringLiteral);
+  },
+});
+
+Deno.bench({
+  name: "String Literal - To CBORType",
+  fn() {
+    const _encoded = StringLiteralSchema.toCBORType(stringLiteralValue);
+  },
+});
+
+Deno.bench({
+  name: "Number Literal - From CBORType",
+  fn() {
+    const _value = NumberLiteralSchema.fromCBORType(encodedNumberLiteral);
+  },
+});
+
+Deno.bench({
+  name: "Number Literal - To CBORType",
+  fn() {
+    const _encoded = NumberLiteralSchema.toCBORType(numberLiteralValue);
+  },
+});
+
+Deno.bench({
+  name: "Boolean Literal - From CBORType",
+  fn() {
+    const _value = BooleanLiteralSchema.fromCBORType(encodedBooleanLiteral);
+  },
+});
+
+Deno.bench({
+  name: "Boolean Literal - To CBORType",
+  fn() {
+    const _encoded = BooleanLiteralSchema.toCBORType(booleanLiteralValue);
+  },
+});
+
+Deno.bench({
+  name: "BigInt Literal - From CBORType",
+  fn() {
+    const _value = BigIntLiteralSchema.fromCBORType(encodedBigIntLiteral);
+  },
+});
+
+Deno.bench({
+  name: "BigInt Literal - To CBORType",
+  fn() {
+    const _encoded = BigIntLiteralSchema.toCBORType(bigIntLiteralValue);
+  },
+});
+
+Deno.bench({
+  name: "Bytes Literal - From CBORType",
+  fn() {
+    const _value = BytesLiteralSchema.fromCBORType(encodedBytesLiteral);
+  },
+});
+
+Deno.bench({
+  name: "Bytes Literal - To CBORType",
+  fn() {
+    const _encoded = BytesLiteralSchema.toCBORType(bytesLiteralValue);
+  },
+});
+
+// List of Union of Tuples with Literal Discriminators Benchmarks
+Deno.bench({
+  name: "List of Union of Tuples with Literals - From CBORType",
+  fn() {
+    const _value = tupleWithLiteralListSchema.fromCBORType(
+      encodedTupleWithLiteralList,
+    );
+  },
+});
+
+Deno.bench({
+  name: "List of Union of Tuples with Literals - To CBORType",
+  fn() {
+    const _encoded = tupleWithLiteralListSchema.toCBORType(
+      tupleWithLiteralListValue,
     );
   },
 });

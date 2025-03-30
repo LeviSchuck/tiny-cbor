@@ -1,8 +1,6 @@
 import { assertThrows } from "jsr:@std/assert";
 import { assertEquals } from "jsr:@std/assert";
 import { literal } from "./literal.ts";
-import type { CBORType } from "../cbor.ts";
-import type { CBORSchemaType } from "./type.ts";
 
 // Test string literals
 Deno.test("Test string literals", () => {
@@ -134,7 +132,10 @@ Deno.test("Test bigint literals", () => {
     "Expected bigint, got Uint8Array",
   );
   assertThrows(
-    () => schema.toCBORType(new Uint8Array([1, 2, 3]) as unknown as typeof bigValue),
+    () =>
+      schema.toCBORType(
+        new Uint8Array([1, 2, 3]) as unknown as typeof bigValue,
+      ),
     Error,
     "Expected bigint, got Uint8Array",
   );
@@ -253,4 +254,4 @@ Deno.test("Test Uint8Array literals", () => {
     Error,
     "Expected Uint8Array, got object",
   );
-}); 
+});
