@@ -468,12 +468,12 @@ Deno.test("Test union of maps with literal discriminators", () => {
 // Test complex recursive structures with lazy evaluation
 Deno.test("Test complex recursive structures with lazy evaluation", () => {
   // Define a complex recursive structure for JSON-like data
-  type JSONValue = 
-    | string 
-    | number 
-    | boolean 
-    | null 
-    | JSONValue[] 
+  type JSONValue =
+    | string
+    | number
+    | boolean
+    | null
+    | JSONValue[]
     | { [key: string]: JSONValue };
 
   // Create a recursive schema for JSON-like data
@@ -485,11 +485,14 @@ Deno.test("Test complex recursive structures with lazy evaluation", () => {
     cs.array(lazy(() => jsonSchema)),
     cs.map([
       cs.field("type", cs.literal("object")),
-      cs.field("properties", cs.array(cs.map([
-        cs.field("key", cs.string),
-        cs.field("value", lazy(() => jsonSchema))
-      ])))
-    ])
+      cs.field(
+        "properties",
+        cs.array(cs.map([
+          cs.field("key", cs.string),
+          cs.field("value", lazy(() => jsonSchema)),
+        ])),
+      ),
+    ]),
   ]);
 
   // Test with a complex nested structure
@@ -498,11 +501,11 @@ Deno.test("Test complex recursive structures with lazy evaluation", () => {
     properties: [
       {
         key: "name",
-        value: "test"
+        value: "test",
       },
       {
         key: "numbers",
-        value: [1, 2, 3]
+        value: [1, 2, 3],
       },
       {
         key: "nested",
@@ -511,12 +514,12 @@ Deno.test("Test complex recursive structures with lazy evaluation", () => {
           properties: [
             {
               key: "deep",
-              value: [true, { type: "null" }, "nested"]
-            }
-          ]
-        }
-      }
-    ]
+              value: [true, { type: "null" }, "nested"],
+            },
+          ],
+        },
+      },
+    ],
   };
 
   // Test round trip
@@ -528,7 +531,7 @@ Deno.test("Test complex recursive structures with lazy evaluation", () => {
   assertThrows(
     () => jsonSchema.fromCBORType(new Map([["invalid", "data"]])),
     Error,
-    "Value doesn't match any schema in union"
+    "Value doesn't match any schema in union",
   );
 
   // Test with partially valid data
@@ -537,14 +540,14 @@ Deno.test("Test complex recursive structures with lazy evaluation", () => {
     properties: [
       {
         key: "invalid",
-        value: {} // Empty object is not a valid JSON value in our schema
-      }
-    ]
+        value: {}, // Empty object is not a valid JSON value in our schema
+      },
+    ],
   };
 
   assertThrows(
     () => jsonSchema.toCBORType(partiallyValidData),
     Error,
-    "Value doesn't match any schema in union"
+    "Value doesn't match any schema in union",
   );
 });

@@ -63,7 +63,7 @@ Deno.test("Test recursive lazy schema", () => {
   assertEquals(decoded, simpleTree);
 
   // Test with invalid data
-  const invalidData = new Map<string, string | number | any[]>([
+  const invalidData = new Map<string, string | number | string[]>([
     ["value", 123],
     ["children", []],
   ]);
@@ -89,7 +89,7 @@ Deno.test("Test lazy schema fallback behavior for missing try functions", () => 
         throw new Error("Expected number");
       }
       return value;
-    }
+    },
   } as CBORSchemaType<number>;
 
   const lazyBasicSchema = lazy(() => basicSchema);
@@ -108,7 +108,9 @@ Deno.test("Test lazy schema fallback behavior for missing try functions", () => 
   assertEquals(success3, false);
   assertStringIncludes(error1 as string, "Expected number");
 
-  const [success4, error2] = lazyBasicSchema.tryToCBORType!("not a number" as unknown as number);
+  const [success4, error2] = lazyBasicSchema.tryToCBORType!(
+    "not a number" as unknown as number,
+  );
   assertEquals(success4, false);
   assertStringIncludes(error2 as string, "Expected number");
 });
@@ -121,7 +123,7 @@ Deno.test("Test lazy schema fallback with non-Error throws", () => {
     },
     toCBORType(_value: number): CBORType {
       throw { custom: "error object" };
-    }
+    },
   } as CBORSchemaType<number>;
 
   const lazyErrorSchema = lazy(() => errorThrowingSchema);
@@ -163,7 +165,7 @@ Deno.test("Test lazy schema with implemented try functions", () => {
         return [false, "Custom try error: Expected number"];
       }
       return [true, value];
-    }
+    },
   };
 
   const lazyFullSchema = lazy(() => fullSchema);
@@ -182,7 +184,9 @@ Deno.test("Test lazy schema with implemented try functions", () => {
   assertEquals(success3, false);
   assertStringIncludes(error1 as string, "Custom try error: Expected number");
 
-  const [success4, error2] = lazyFullSchema.tryToCBORType!("not a number" as unknown as number);
+  const [success4, error2] = lazyFullSchema.tryToCBORType!(
+    "not a number" as unknown as number,
+  );
   assertEquals(success4, false);
   assertEquals(error2, "Custom try error: Expected number");
-}); 
+});

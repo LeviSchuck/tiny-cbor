@@ -4,11 +4,11 @@ import type { CBORType } from "../cbor.ts";
 /**
  * Creates a lazy schema that defers schema resolution until runtime.
  * This is useful for recursive type definitions.
- * 
+ *
  * @template T The type of the schema
  * @param schemaFn A function that returns the schema
  * @returns A schema that will resolve the actual schema at runtime
- * 
+ *
  * @example
  * ```typescript
  * // Define a recursive schema for a tree structure
@@ -19,7 +19,7 @@ import type { CBORType } from "../cbor.ts";
  * ```
  */
 export function lazy<T>(
-  schemaFn: () => CBORSchemaType<T>
+  schemaFn: () => CBORSchemaType<T>,
 ): CBORSchemaType<T> {
   let schema: CBORSchemaType<T>;
 
@@ -68,6 +68,6 @@ export function lazy<T>(
         }
       }
       return schema!.tryToCBORType(value);
-    }
+    },
   };
-} 
+}
