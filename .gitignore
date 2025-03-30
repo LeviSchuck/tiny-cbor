@@ -6,3 +6,4 @@ ignored
 html_cov
 cod.lcov
 *.lcov
+rfcs
