@@ -18,6 +18,7 @@ import type {
   CBORSchemaValue,
   FieldDefinition,
 } from "./schema/type.ts";
+import { lazy } from "./schema/lazy.ts";
 
 /**
  * Infers the TypeScript type from a CBOR schema, an alias of CBORSchemaValue
@@ -79,7 +80,7 @@ export class CBORSchema {
   static numberField = numberField;
   static nested = nested;
   static literal = literal;
-
+  static lazy = lazy;
   /**
    * Decodes a CBOR byte array using the provided schema
    *

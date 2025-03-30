@@ -4,6 +4,7 @@ import type { CBORType } from "./cbor.ts";
 import type { CBORSchemaType } from "./schema/type.ts";
 import { CBORTag } from "./cbor.ts";
 import type { CBORTypedTag } from "./schema/tagged.ts";
+import { lazy } from "./schema/lazy.ts";
 
 // Basic object test
 const ObjectDefinition = cs.map([
@@ -461,5 +462,89 @@ Deno.test("Test union of maps with literal discriminators", () => {
     () => mapListSchema.toCBORType(missingKeyList),
     Error,
     "Value doesn't match any schema in union",
+  );
+});
+
+// Test complex recursive structures with lazy evaluation
+Deno.test("Test complex recursive structures with lazy evaluation", () => {
+  // Define a complex recursive structure for JSON-like data
+  type JSONValue = 
+    | string 
+    | number 
+    | boolean 
+    | null 
+    | JSONValue[] 
+    | { [key: string]: JSONValue };
+
+  // Create a recursive schema for JSON-like data
+  const jsonSchema: CBORSchemaType<JSONValue> = cs.union([
+    cs.string,
+    cs.float,
+    cs.boolean,
+    cs.map([cs.field("type", cs.literal("null"))]), // Represent null as an object
+    cs.array(lazy(() => jsonSchema)),
+    cs.map([
+      cs.field("type", cs.literal("object")),
+      cs.field("properties", cs.array(cs.map([
+        cs.field("key", cs.string),
+        cs.field("value", lazy(() => jsonSchema))
+      ])))
+    ])
+  ]);
+
+  // Test with a complex nested structure
+  const complexData: JSONValue = {
+    type: "object",
+    properties: [
+      {
+        key: "name",
+        value: "test"
+      },
+      {
+        key: "numbers",
+        value: [1, 2, 3]
+      },
+      {
+        key: "nested",
+        value: {
+          type: "object",
+          properties: [
+            {
+              key: "deep",
+              value: [true, { type: "null" }, "nested"]
+            }
+          ]
+        }
+      }
+    ]
+  };
+
+  // Test round trip
+  const encoded = jsonSchema.toCBORType(complexData);
+  const decoded = jsonSchema.fromCBORType(encoded);
+  assertEquals(decoded, complexData);
+
+  // Test with invalid data
+  assertThrows(
+    () => jsonSchema.fromCBORType(new Map([["invalid", "data"]])),
+    Error,
+    "Value doesn't match any schema in union"
+  );
+
+  // Test with partially valid data
+  const partiallyValidData = {
+    type: "object",
+    properties: [
+      {
+        key: "invalid",
+        value: {} // Empty object is not a valid JSON value in our schema
+      }
+    ]
+  };
+
+  assertThrows(
+    () => jsonSchema.toCBORType(partiallyValidData),
+    Error,
+    "Value doesn't match any schema in union"
   );
 });

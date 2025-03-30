@@ -391,3 +391,53 @@ Deno.test("Map schema extension", () => {
     personWithoutOptional,
   );
 });
+
+// Test map schema field value assignment conditions
+Deno.test("Map schema field value assignment conditions", () => {
+  // Create a schema that can return undefined or a value
+  const conditionalSchema: CBORSchemaType<string | undefined> = {
+    fromCBORType(data: CBORType): string | undefined {
+      if (data === "return-undefined") return undefined;
+      return String(data);
+    },
+    toCBORType(value: string | undefined): CBORType {
+      return value ?? "return-undefined";
+    },
+  };
+
+  // Test case 1: Optional field with undefined value (both conditions false)
+  const optionalUndefinedSchema = map([
+    field("test", optional(conditionalSchema)),
+  ]);
+  const optionalUndefinedResult = optionalUndefinedSchema.fromCBORType(
+    new Map([["test", "return-undefined"]]),
+  );
+  assertEquals(optionalUndefinedResult, {});
+
+  // Test case 2: Optional field with defined value (first condition true, second false)
+  const optionalDefinedSchema = map([
+    field("test", optional(conditionalSchema)),
+  ]);
+  const optionalDefinedResult = optionalDefinedSchema.fromCBORType(
+    new Map([["test", "value"]]),
+  );
+  assertEquals(optionalDefinedResult, { test: "value" });
+
+  // Test case 3: Required field with undefined value (first condition false, second true)
+  const requiredUndefinedSchema = map([
+    field("test", conditionalSchema),
+  ]);
+  const requiredUndefinedResult = requiredUndefinedSchema.fromCBORType(
+    new Map([["test", "return-undefined"]]),
+  );
+  assertEquals(requiredUndefinedResult, { test: undefined });
+
+  // Test case 4: Required field with defined value (both conditions true)
+  const requiredDefinedSchema = map([
+    field("test", conditionalSchema),
+  ]);
+  const requiredDefinedResult = requiredDefinedSchema.fromCBORType(
+    new Map([["test", "value"]]),
+  );
+  assertEquals(requiredDefinedResult, { test: "value" });
+});
