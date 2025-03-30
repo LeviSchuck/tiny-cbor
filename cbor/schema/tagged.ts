@@ -4,7 +4,7 @@ import { CBORTag, type CBORType } from "../cbor.ts";
 /**
  * A typed tag that preserves both the tag number and value type information
  */
-export type CBORTypedTag<N extends number, V> = {
+export type CBORTypedTag<N extends number | bigint, V> = {
   tag: N;
   value: V;
 };
@@ -12,7 +12,7 @@ export type CBORTypedTag<N extends number, V> = {
 /**
  * Creates a schema for tagged CBOR values
  *
- * @template N The literal type of the tag number
+ * @template N The literal type of the tag number (number or bigint)
  * @template V The type of the tagged value
  * @param tagNumber The CBOR tag number
  * @param valueSchema Schema for the tagged value
@@ -28,7 +28,7 @@ export type CBORTypedTag<N extends number, V> = {
  * const decoded = cs.fromCBOR(dateSchema, encoded);
  * ```
  */
-export function tagged<N extends number, V>(
+export function tagged<N extends number | bigint, V>(
   tagNumber: N,
   valueSchema: CBORSchemaType<V>,
 ): CBORSchemaType<CBORTypedTag<N, V>> {

@@ -44,7 +44,8 @@ Deno.test("Tagged types with invalid inputs - toCBORType", () => {
 
   // Tagged schema should reject wrong tag number (lie to the type system so the test can execute)
   assertThrows(
-    () => dateSchema.toCBORType({ tag: 1 as number as 0, value: "2024-03-03" }),
+    () =>
+      dateSchema.toCBORType({ tag: 1 as unknown as 0, value: "2024-03-03" }),
     Error,
     "Expected tag 0",
   );
@@ -132,7 +133,7 @@ Deno.test("Test custom type throwing Error in tagged values", () => {
 
   // Test with wrong tag number in toCBORType
   assertThrows(
-    () => taggedSchema.toCBORType({ tag: 43 as 42, value: "ok" }),
+    () => taggedSchema.toCBORType({ tag: 43 as unknown as 42, value: "ok" }),
     Error,
     "Expected tag 42, got 43",
   );
@@ -191,4 +192,101 @@ Deno.test("Test custom type throwing non-Error in tagged values", () => {
     Error,
     "Error encoding tagged value: [object Object]",
   );
+});
+
+Deno.test("tagged schema with number tag", () => {
+  const schema = tagged(0, string);
+  const value: CBORTypedTag<0, string> = {
+    tag: 0,
+    value: "2024-01-01T00:00:00Z",
+  };
+
+  const encoded = schema.toCBORType(value);
+  assertEquals(encoded instanceof CBORTag, true);
+  if (encoded instanceof CBORTag) {
+    assertEquals(encoded.tag, 0);
+    assertEquals(encoded.value, "2024-01-01T00:00:00Z");
+  }
+
+  const decoded = schema.fromCBORType(encoded);
+  assertEquals(decoded, value);
+});
+
+Deno.test("tagged schema with bigint tag", () => {
+  const bigTag = 18446744073709551615n;
+  const schema = tagged(bigTag, string);
+  const value: CBORTypedTag<typeof bigTag, string> = {
+    tag: bigTag,
+    value: "test",
+  };
+
+  const encoded = schema.toCBORType(value);
+  assertEquals(encoded instanceof CBORTag, true);
+  if (encoded instanceof CBORTag) {
+    assertEquals(encoded.tag, bigTag);
+    assertEquals(encoded.value, "test");
+  }
+
+  const decoded = schema.fromCBORType(encoded);
+  assertEquals(decoded, value);
+});
+
+Deno.test("tagged schema validation", () => {
+  const schema = tagged(0, string);
+
+  // Test wrong tag number
+  assertThrows(() => {
+    schema.toCBORType(
+      { tag: 1, value: "test" } as unknown as CBORTypedTag<0, string>,
+    );
+  }, "Expected tag 0, got 1");
+
+  // Test wrong tag type
+  assertThrows(() => {
+    schema.toCBORType(
+      { tag: "0", value: "test" } as unknown as CBORTypedTag<0, string>,
+    );
+  });
+
+  // Test wrong value type
+  assertThrows(() => {
+    schema.toCBORType(
+      { tag: 0, value: 123 } as unknown as CBORTypedTag<0, string>,
+    );
+  });
+});
+
+Deno.test("tagged schema with bigint tag validation", () => {
+  const bigTag = 18446744073709551615n;
+  const schema = tagged(bigTag, string);
+
+  // Test wrong tag number
+  assertThrows(() => {
+    schema.toCBORType(
+      { tag: 18446744073709551614n, value: "test" } as unknown as CBORTypedTag<
+        typeof bigTag,
+        string
+      >,
+    );
+  }, "Expected tag 18446744073709551615, got 18446744073709551614");
+
+  // Test wrong tag type
+  assertThrows(() => {
+    schema.toCBORType(
+      { tag: 0, value: "test" } as unknown as CBORTypedTag<
+        typeof bigTag,
+        string
+      >,
+    );
+  }, "Expected tag 18446744073709551615, got 0");
+
+  // Test wrong value type
+  assertThrows(() => {
+    schema.toCBORType(
+      { tag: bigTag, value: 123 } as unknown as CBORTypedTag<
+        typeof bigTag,
+        string
+      >,
+    );
+  });
 });
