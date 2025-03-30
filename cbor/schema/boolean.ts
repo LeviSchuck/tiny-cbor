@@ -6,6 +6,7 @@ import type { CBORType } from "../cbor.ts";
  *
  * @example
  * ```typescript
+ * import { cs } from "../cbor_schema.ts";
  * const schema = cs.boolean;
  * const encoded = cs.toCBOR(schema, true);
  * const decoded = cs.fromCBOR(schema, encoded); // true

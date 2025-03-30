@@ -9,6 +9,7 @@ import type { CBORType } from "../cbor.ts";
  *
  * @example
  * ```typescript
+ * import { cs } from "../cbor_schema.ts";
  * const numberOrStringSchema = cs.union([
  *   cs.float,
  *   cs.string

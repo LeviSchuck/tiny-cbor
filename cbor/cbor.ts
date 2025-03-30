@@ -20,7 +20,7 @@ import {
  * If the tag number or value needs to change, then construct a new tag
  */
 export class CBORTag {
-  private tagId: number;
+  private tagId: number | bigint;
   private tagValue: CBORType;
   /**
    * Wrap a value with a tag number.
@@ -29,14 +29,14 @@ export class CBORTag {
    * @param tag Tag number
    * @param value Wrapped value
    */
-  constructor(tag: number, value: CBORType) {
+  constructor(tag: number | bigint, value: CBORType) {
     this.tagId = tag;
     this.tagValue = value;
   }
   /**
    * Read the tag number
    */
-  get tag(): number {
+  get tag(): number | bigint {
     return this.tagId;
   }
   /**
@@ -67,7 +67,7 @@ function decodeUnsignedInteger(
   data: DataView,
   argument: number,
   index: number,
-): [number, number] {
+): [number | bigint, number] {
   return decodeLength(data, argument, index);
 }
 
@@ -75,8 +75,11 @@ function decodeNegativeInteger(
   data: DataView,
   argument: number,
   index: number,
-): [number, number] {
+): [number | bigint, number] {
   const [value, length] = decodeUnsignedInteger(data, argument, index);
+  if (typeof value === "bigint") {
+    return [-value - 1n, length];
+  }
   return [-value - 1, length];
 }
 
@@ -86,6 +89,9 @@ function decodeByteString(
   index: number,
 ): [Uint8Array, number] {
   const [lengthValue, lengthConsumed] = decodeLength(data, argument, index);
+  if (typeof lengthValue === "bigint") {
+    throw new Error("ByteString length is too large");
+  }
   const dataStartIndex = index + lengthConsumed;
   return [
     new Uint8Array(

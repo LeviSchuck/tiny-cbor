@@ -14,6 +14,7 @@ import type { CBORType } from "../cbor.ts";
  *
  * @example
  * ```typescript
+ * import { cs } from "../cbor_schema.ts";
  * const personSchema = cs.map([
  *   cs.field("name", cs.string),
  *   cs.numberField(1, "age", cs.integer),
@@ -110,6 +111,7 @@ export function map<Fields extends FieldDefinition<unknown, string>[]>(
  *
  * @example
  * ```typescript
+ * import { cs } from "../cbor_schema.ts";
  * const nameField = cs.field("name", cs.string);
  * const emailField = cs.field("email", cs.optional(cs.string));
  * ```
@@ -136,6 +138,7 @@ export function field<T, K extends string>(
  *
  * @example
  * ```typescript
+ * import { cs } from "../cbor_schema.ts";
  * const ageField = cs.numberField(1, "age", cs.integer);
  * const scoreField = cs.numberField(2, "score", cs.float);
  * ```

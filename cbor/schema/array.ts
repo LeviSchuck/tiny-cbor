@@ -8,6 +8,7 @@ import type { CBORType } from "../cbor.ts";
  *
  * @example
  * ```typescript
+ * import { cs } from "../cbor_schema.ts";
  * const numberArraySchema = cs.array(cs.float);
  * const encoded = cs.toCBOR(numberArraySchema, [1, 2, 3]);
  * const decoded = cs.fromCBOR(numberArraySchema, encoded); // [1, 2, 3]

@@ -10,6 +10,7 @@ import { decodeCBOR, encodeCBOR } from "../cbor.ts";
  *
  * @example
  * ```typescript
+ * import { cs } from "../cbor_schema.ts";
  * const metadataSchema = cs.map([
  *   cs.field("version", cs.integer)
  * ]);

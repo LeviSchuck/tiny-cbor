@@ -9,6 +9,7 @@ import type { CBORType } from "../cbor.ts";
  *
  * @example
  * ```typescript
+ * import { cs } from "../cbor_schema.ts";
  * const pointSchema = cs.tuple([
  *   cs.float, // x coordinate
  *   cs.float  // y coordinate

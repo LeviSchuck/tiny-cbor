@@ -6,6 +6,7 @@ import type { CBORType } from "../cbor.ts";
  *
  * @example
  * ```typescript
+ * import { cs } from "../cbor_schema.ts";
  * const schema = cs.float;
  * const encoded = cs.toCBOR(schema, 3.14);
  * const decoded = cs.fromCBOR(schema, encoded); // 3.14

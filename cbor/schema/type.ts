@@ -28,6 +28,7 @@ export interface CBORSchemaType<T> {
  *
  * @example
  * ```typescript
+ * import { cs } from "../cbor_schema.ts";
  * const WebAuthnSchema = cs.map([
  *   cs.field("fmt", cs.string),
  *   cs.field(
@@ -53,6 +54,7 @@ export type CBORSchemaValue<T> = T extends CBORSchemaType<infer U> ? U : never;
  *
  * @example
  * ```typescript
+ * import { cs } from "../cbor_schema.ts";
  * const nameField: FieldDefinition<string, "name"> = {
  *   key: "name",
  *   jsKey: "name",

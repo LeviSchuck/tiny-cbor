@@ -9,6 +9,7 @@ import type { CBORType } from "../cbor.ts";
  *
  * @example
  * ```typescript
+ * import { cs } from "../cbor_schema.ts";
  * const optionalNumberSchema = cs.optional(cs.float);
  * const encoded1 = cs.toCBOR(optionalNumberSchema, 42);
  * const encoded2 = cs.toCBOR(optionalNumberSchema, undefined);

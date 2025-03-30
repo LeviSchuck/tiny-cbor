@@ -6,6 +6,7 @@ import type { CBORType } from "../cbor.ts";
  *
  * @example
  * ```typescript
+ * import { cs } from "../cbor_schema.ts";
  * const schema = cs.bigint;
  * const encoded = cs.toCBOR(schema, BigInt("9007199254740992"));
  * const decoded = cs.fromCBOR(schema, encoded); // BigInt("9007199254740992")

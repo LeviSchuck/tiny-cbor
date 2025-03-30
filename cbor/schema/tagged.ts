@@ -19,6 +19,7 @@ export type CBORTypedTag<N extends number, V> = {
  *
  * @example
  * ```typescript
+ * import { cs } from "../cbor_schema.ts";
  * const dateSchema = cs.tagged(
  *   0, // Standard datetime tag
  *   cs.string
