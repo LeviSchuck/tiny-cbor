@@ -12,6 +12,7 @@ import { optional } from "./schema/optional.ts";
 import { field, map, numberField } from "./schema/map.ts";
 import { nested } from "./schema/nested.ts";
 import { bigint } from "./schema/bigint.ts";
+import { literal } from "./schema/literal.ts";
 import type { CBORSchemaType, FieldDefinition } from "./schema/type.ts";
 
 /**
@@ -56,6 +57,7 @@ export class CBORSchema {
   static field = field;
   static numberField = numberField;
   static nested = nested;
+  static literal = literal;
 
   /**
    * Decodes a CBOR byte array using the provided schema

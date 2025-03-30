@@ -332,3 +332,131 @@ Deno.test("Test list of union of tagged values", () => {
     "Value doesn't match any schema in union",
   );
 });
+
+// Test union of tuples with literal discriminators
+Deno.test("Test union of tuples with literal discriminators", () => {
+  // Create schemas for different tuple types with literal discriminators
+  const helloTupleSchema = cs.tuple([
+    cs.literal(1),
+    cs.string,
+  ]);
+
+  const numberTupleSchema = cs.tuple([
+    cs.literal(2),
+    cs.integer,
+  ]);
+
+  // Create a union of the tuple schemas
+  const tupleUnionSchema = cs.union([
+    helloTupleSchema,
+    numberTupleSchema,
+  ]);
+
+  // Create a list schema of the union
+  const tupleListSchema = cs.array(tupleUnionSchema);
+
+  // Test valid list with mixed tuple types
+  const mixedListValue = [
+    [1, "hello"] as [1, string],
+    [2, 99999] as [2, number],
+  ];
+
+  // Test round trip
+  const encoded = tupleListSchema.toCBORType(mixedListValue);
+  const decoded = tupleListSchema.fromCBORType(encoded);
+  assertEquals(decoded, mixedListValue);
+
+  // Test invalid list with wrong discriminator
+  const invalidListValue = [
+    [1, "hello"] as [1, string],
+    [3, 99999] as unknown as [2, number], // Wrong discriminator value
+  ];
+
+  assertThrows(
+    () => tupleListSchema.toCBORType(invalidListValue),
+    Error,
+    "Value doesn't match any schema in union for encoding",
+  );
+
+  // Test invalid list with wrong value type
+  const invalidValueList = [
+    [1, "hello"] as [1, string],
+    [2, "not-a-number"] as unknown as [2, number], // Wrong value type for number tuple
+  ];
+
+  assertThrows(
+    () => tupleListSchema.toCBORType(invalidValueList),
+    Error,
+    "Value doesn't match any schema in union",
+  );
+});
+
+// Test union of maps with literal discriminators
+Deno.test("Test union of maps with literal discriminators", () => {
+  // Create schemas for different map types with literal discriminators
+  const helloMapSchema = cs.map([
+    cs.field("key", cs.literal(1)),
+    cs.field("value", cs.string),
+  ]);
+
+  const numberMapSchema = cs.map([
+    cs.field("key", cs.literal(2)),
+    cs.field("value", cs.integer),
+  ]);
+
+  // Create a union of the map schemas
+  const mapUnionSchema = cs.union([
+    helloMapSchema,
+    numberMapSchema,
+  ]);
+
+  // Create a list schema of the union
+  const mapListSchema = cs.array(mapUnionSchema);
+
+  // Test valid list with mixed map types
+  const mixedListValue = [
+    { key: 1 as const, value: "hello" },
+    { key: 2 as const, value: 99999 },
+  ];
+
+  // Test round trip
+  const encoded = mapListSchema.toCBORType(mixedListValue);
+  const decoded = mapListSchema.fromCBORType(encoded);
+  assertEquals(decoded, mixedListValue);
+
+  // Test invalid list with wrong discriminator
+  const invalidListValue = [
+    { key: 1 as const, value: "hello" },
+    { key: 3 as const, value: 99999 } as unknown as { key: 2; value: number }, // Wrong discriminator value
+  ];
+
+  assertThrows(
+    () => mapListSchema.toCBORType(invalidListValue),
+    Error,
+    "Value doesn't match any schema in union for encoding",
+  );
+
+  // Test invalid list with wrong value type
+  const invalidValueList = [
+    { key: 1 as const, value: "hello" },
+    { key: 2 as const, value: "not-a-number" } as unknown as { key: 2; value: number }, // Wrong value type for number map
+  ];
+
+  assertThrows(
+    () => mapListSchema.toCBORType(invalidValueList),
+    Error,
+    "Value doesn't match any schema in union",
+  );
+
+  // Test invalid list with missing discriminator field
+  const missingKeyList = [
+    { key: 1 as const, value: "hello" },
+    { value: 99999 } as unknown as { key: 2; value: number }, // Missing key field
+  ];
+
+  assertThrows(
+    () => mapListSchema.toCBORType(missingKeyList),
+    Error,
+    "Value doesn't match any schema in union",
+  );
+});
