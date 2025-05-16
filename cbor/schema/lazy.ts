@@ -77,5 +77,5 @@ export function lazy<T>(
       }
       return schema!.tryToCBORType(value);
     },
-  } as RecursiveSchema<T>;
+  };
 }
