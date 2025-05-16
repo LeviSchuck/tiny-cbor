@@ -25,6 +25,12 @@
       "CHANGELOG.md"
     ]
   },
+  "exclude": [
+    "npm",
+    "CHANGELOG.md",
+    ".github",
+    ".vscode"
+  ],
   "name": "@levischuck/tiny-cbor",
   "version": "0.3.0",
   "license": "MIT",
