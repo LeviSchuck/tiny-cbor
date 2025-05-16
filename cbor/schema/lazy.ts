@@ -4,6 +4,8 @@ import type { CBORType } from "../cbor.ts";
 /**
  * Creates a lazy schema that defers schema resolution until runtime.
  * This is useful for recursive type definitions.
+ * Unfortunately, type inference is hard for recursive schemas,
+ * so an explicit type annotation is recommended.
  *
  * @template T The type of the schema
  * @param schemaFn A function that returns the schema
@@ -11,8 +13,14 @@ import type { CBORType } from "../cbor.ts";
  *
  * @example
  * ```typescript
+ * import { cs, type valueOf } from "../cbor_schema.ts";
+ * import { type ExtendableMapSchema } from "./type.ts";
  * // Define a recursive schema for a tree structure
- * const treeSchema = cs.map([
+ * type Tree = {
+ *   value: string;
+ *   children: Tree[];
+ * }
+ * let treeSchema : ExtendableMapSchema<Tree> = cs.map([
  *   cs.field("value", cs.string),
  *   cs.field("children", cs.array(cs.lazy(() => treeSchema)))
  * ]);
@@ -69,5 +77,5 @@ export function lazy<T>(
       }
       return schema!.tryToCBORType(value);
     },
-  };
+  } as RecursiveSchema<T>;
 }

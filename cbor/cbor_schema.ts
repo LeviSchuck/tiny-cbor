@@ -26,16 +26,17 @@ import { lazy } from "./schema/lazy.ts";
  * @template T The schema type to infer from
  * @example
  * ```typescript
+ *
  * const personSchema = cs.map([
  *   cs.field("name", cs.string),
  *   cs.field("age", cs.integer)
  * ]);
  *
- * type Person = infer<typeof personSchema>;
+ * type Person = valueOf<typeof personSchema>;
  * // Person = { name: string; age: number }
  * ```
  */
-export type infer<T> = CBORSchemaValue<T>;
+export type valueOf<T> = CBORSchemaValue<T>;
 
 /**
  * Main schema builder class containing all schema constructors and primitive types.
