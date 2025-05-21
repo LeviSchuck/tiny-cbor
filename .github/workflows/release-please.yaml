@@ -21,7 +21,7 @@ jobs:
         id: release
         with:
           token: ${{ secrets.RELEASE_PLEASE_PAT }}
-          release-type: simple
+          config-file: release-please-config.json
       - uses: denoland/setup-deno@v2
         if: ${{ steps.release.outputs.prs_created }}
         with:
