@@ -44,32 +44,44 @@ that is incomplete will throw an error during decoding.
 
 ## Example
 
-```ts
+CBOR byte decoding example, this outputs a CBORType which is up to you to ensure
+matches the right underlying type (e.g. a string) at runtime.
+
+```typescript
 // NPM
 // import { decodeCBOR } from "@levischuck/tiny-cbor";
 // or JSR
 // import { decodeCBOR } from "jsr:@levischuck/tiny-cbor";
 import { decodeCBOR } from "./index.ts";
 // Get your bytes somehow, directly or with decodeBase64 / decodeHex (available through @levischuck/tiny-encodings)
+// encoded ["hello", "world", 1]
 const HELLO_WORLD_BYTES = new Uint8Array([
-  107, // String wih length 11
-  104, // h
-  101, // e
-  108, // l
-  108, // l
-  111, // o
-  32, // Space
-  119, // w
-  111, // o
-  114, // r
-  108, // l
-  100, // d
+  0x83, // Array (3)
+  0x65, // text (5),
+  0x68, // h
+  0x65, // e
+  0x6C, // l
+  0x6C, // l
+  0x6F, // o
+  0x65, // text(5),
+  0x77, // w
+  0x6F, // o
+  0x72, // r
+  0x6C, // l
+  0x64, // d
+  0x01, // 1
 ]);
-const helloWorld = decodeCBOR(HELLO_WORLD_BYTES);
-if ("hello world" == helloWorld) {
+const decoded = decodeCBOR(HELLO_WORLD_BYTES);
+if (
+  Array.isArray(decoded) && decoded.length == 3 && decoded[0] == "hello" &&
+  decoded[1] == "world" && decoded[2] == 1
+) {
   console.log("Success!");
 }
 ```
+
+If you're looking to make this more ergonomic in JS / TS, check out
+[tiny-cbor-schema](https://github.com/levischuck/tiny-cbor-schema)!
 
 ## Where to get it
 

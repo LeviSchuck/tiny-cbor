@@ -1,7 +1,7 @@
 import {
-  assertEquals,
   assertThrows,
-} from "https://deno.land/std@0.224.0/testing/asserts.ts";
+} from "https://deno.land/std@0.224.0/assert/assert_throws.ts";
+import { assertEquals } from "https://deno.land/std@0.224.0/assert/assert_equals.ts";
 import {
   decodeLength,
   encodeLength,
@@ -37,6 +37,10 @@ Deno.test({
     ]);
     assertEquals(decodeLength(toView(decodeHex("1b000000e8d4a51000")), 27, 0), [
       1000000000000,
+      9,
+    ]);
+    assertEquals(decodeLength(toView(decodeHex("1b0020000000000000")), 27, 0), [
+      9007199254740992n,
       9,
     ]);
   },
@@ -191,9 +195,6 @@ Deno.test({
     assertThrows(() => {
       decodeLength(toView(decodeHex("1b000000e8d4a510")), 27, 0);
     }, "Requires eight more bytes, missing a byte");
-    assertThrows(() => {
-      decodeLength(toView(decodeHex("1b0000000000000017")), 27, 0);
-    }, "Requires eight more bytes, must be > 23");
   },
 });
 

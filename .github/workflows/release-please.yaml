@@ -28,20 +28,6 @@ jobs:
           deno-version: v2.x
       - uses: actions/checkout@v4
         if: ${{ steps.release.outputs.prs_created }}
-      - name: Update release PR
-        if: ${{ steps.release.outputs.prs_created && steps.release.outputs.pr }}
-        shell: bash
-        env:
-          JSON: ${{ steps.release.outputs.pr }}
-        run: |
-          BRANCH=$(echo $JSON | jq -r '.headBranchName')
-          echo "Branch name ${BRANCH}"
-          git fetch origin "${BRANCH}"
-          git checkout "${BRANCH}"
-          deno task version
-          git config user.name "Levi Schuck"
-          git config user.email "me@levischuck.com"
-          git add . && git commit -m "chore: Update version in deno" && git push || echo "No update needed"
       - uses: actions/checkout@v4
         if: ${{ steps.release.outputs.release_created }}
       - name: Get tag version

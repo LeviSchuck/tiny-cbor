@@ -2,7 +2,7 @@ export function decodeLength(
   data: DataView,
   argument: number,
   index: number,
-): [number, number] {
+): [number | bigint, number] {
   if (argument < 24) {
     return [argument, 1];
   }
@@ -39,6 +39,8 @@ export function decodeLength(
         // to encode as a javascript number
         if (bigOutput >= 24n && bigOutput <= Number.MAX_SAFE_INTEGER) {
           return [Number(bigOutput), 9];
+        } else {
+          return [bigOutput, 9];
         }
       }
       break;

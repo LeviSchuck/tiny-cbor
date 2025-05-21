@@ -20,7 +20,7 @@ import {
  * If the tag number or value needs to change, then construct a new tag
  */
 export class CBORTag {
-  private tagId: number;
+  private tagId: number | bigint;
   private tagValue: CBORType;
   /**
    * Wrap a value with a tag number.
@@ -29,14 +29,14 @@ export class CBORTag {
    * @param tag Tag number
    * @param value Wrapped value
    */
-  constructor(tag: number, value: CBORType) {
+  constructor(tag: number | bigint, value: CBORType) {
     this.tagId = tag;
     this.tagValue = value;
   }
   /**
    * Read the tag number
    */
-  get tag(): number {
+  get tag(): number | bigint {
     return this.tagId;
   }
   /**
@@ -67,7 +67,7 @@ function decodeUnsignedInteger(
   data: DataView,
   argument: number,
   index: number,
-): [number, number] {
+): [number | bigint, number] {
   return decodeLength(data, argument, index);
 }
 
@@ -75,8 +75,11 @@ function decodeNegativeInteger(
   data: DataView,
   argument: number,
   index: number,
-): [number, number] {
+): [number | bigint, number] {
   const [value, length] = decodeUnsignedInteger(data, argument, index);
+  if (typeof value === "bigint") {
+    return [-value - 1n, length];
+  }
   return [-value - 1, length];
 }
 
@@ -86,6 +89,9 @@ function decodeByteString(
   index: number,
 ): [Uint8Array, number] {
   const [lengthValue, lengthConsumed] = decodeLength(data, argument, index);
+  if (typeof lengthValue === "bigint") {
+    throw new Error("ByteString length is too large");
+  }
   const dataStartIndex = index + lengthConsumed;
   return [
     new Uint8Array(
@@ -115,7 +121,7 @@ function decodeArray(
   }
   const [length, lengthConsumed] = decodeLength(data, argument, index);
   let consumedLength = lengthConsumed;
-  const value : CBORType[] = [];
+  const value: CBORType[] = [];
   for (let i = 0; i < length; i++) {
     const remainingDataLength = data.byteLength - index - consumedLength;
     if (remainingDataLength <= 0) {
@@ -422,16 +428,20 @@ export function decodePartialCBOR(
     throw new Error("No data");
   }
 
-  if (data instanceof Uint8Array) {
-    return decodeNext(new DataView(data.buffer), index);
-  } else if (data instanceof ArrayBuffer) {
-    return decodeNext(new DataView(data), index);
-  } else if (data instanceof SharedArrayBuffer) {
-    return decodeNext(new DataView(data), index);
-  }
+  const prototype = Object.getPrototypeOf(data);
 
-  // otherwise, it is a data view
-  return decodeNext(data, index);
+  const isArrayBuffer = prototype === ArrayBuffer.prototype;
+  const isSharedArrayBuffer = prototype === SharedArrayBuffer.prototype;
+
+  if (prototype.constructor === Uint8Array.prototype.constructor) {
+    return decodeNext(new DataView((data as Uint8Array).buffer), index);
+  } else if (isArrayBuffer || isSharedArrayBuffer) {
+    return decodeNext(new DataView(data as ArrayBuffer), index);
+  } else if (prototype === DataView.prototype) {
+    return decodeNext(data as DataView, index);
+  } else {
+    throw new Error("Unsupported data type");
+  }
 }
 
 /**

@@ -2,11 +2,12 @@
   "tasks": {
     "test": "deno test --watch",
     "npm": "deno run --allow-env --allow-read --allow-write --allow-run --allow-net scripts/npm.ts",
-    "version": "deno run --allow-read --allow-write scripts/version.ts"
+    "local-coverage": "rm coverage/*.json || true &&deno test --coverage=coverage && deno coverage --html"
   },
   "lint": {
     "exclude": [
-      "npm"
+      "npm",
+      "docs"
     ]
   },
   "fmt": {
@@ -14,11 +15,23 @@
       "npm",
       "CHANGELOG.md",
       ".github",
-      ".vscode"
+      ".vscode",
+      "docs"
     ]
   },
+  "test": {
+    "exclude": [
+      "CHANGELOG.md"
+    ]
+  },
+  "exclude": [
+    "npm",
+    "CHANGELOG.md",
+    ".github",
+    ".vscode"
+  ],
   "name": "@levischuck/tiny-cbor",
-  "version": "0.2.11",
+  "version": "0.3.0",
   "license": "MIT",
   "exports": "./index.ts"
 }
