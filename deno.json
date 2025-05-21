@@ -16,7 +16,8 @@
       "CHANGELOG.md",
       ".github",
       ".vscode",
-      "docs"
+      "docs",
+      ".release-please-manifest.json"
     ]
   },
   "test": {
