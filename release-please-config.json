@@ -4,10 +4,7 @@
       "release-type": "simple",
       "include-component-in-tag": false,
       "extra-files": [
-        {
-          "type": "string",
-          "path": "version.txt"
-        },
+        "version.txt",
         {
           "type": "json",
           "path": "deno.json",
