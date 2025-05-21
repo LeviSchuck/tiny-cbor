@@ -5,7 +5,7 @@
       "include-component-in-tag": false,
       "extra-files": [
         {
-          "type": "plain-text",
+          "type": "string",
           "path": "version.txt"
         },
         {
