@@ -28,9 +28,7 @@ jobs:
         with:
           deno-version: v2.x
       - uses: actions/checkout@v4
-        if: ${{ steps.release.outputs.prs_created }}
-      - uses: actions/checkout@v4
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.prs_created || steps.release.outputs.release_created }}
       - name: Get tag version
         if: ${{ steps.release.outputs.release_created }}
         id: get_tag_version
