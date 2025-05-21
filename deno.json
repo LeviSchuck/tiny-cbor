@@ -32,7 +32,7 @@
     ".vscode"
   ],
   "name": "@levischuck/tiny-cbor",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "exports": "./index.ts"
 }
