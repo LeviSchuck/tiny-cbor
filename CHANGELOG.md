@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.12](https://github.com/LeviSchuck/tiny-cbor/compare/v0.2.11...v0.2.12) (2025-05-21)
+
+
+### Bug Fixes
+
+* Some types no longer worked in deno 2.22.2 ([5fedeb1](https://github.com/LeviSchuck/tiny-cbor/commit/5fedeb1d7953b21d2bfccf1c8ce3accd47fc2d3b))
+
 ## [0.2.11](https://github.com/LeviSchuck/tiny-cbor/compare/v0.2.10...v0.2.11) (2025-02-08)
 
 
