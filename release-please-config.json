@@ -1,0 +1,15 @@
+{
+  "release-type": "simple",
+  "include-component-in-tag": false,
+  "extra-files": [
+    {
+      "type": "plain-text",
+      "path": "version.txt"
+    },
+    {
+      "type": "json",
+      "path": "deno.json",
+      "jsonpath": "$.version"
+    }
+  ]
+}
