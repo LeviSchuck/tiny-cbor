@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/LeviSchuck/tiny-cbor/compare/v0.3.1...v0.3.2) (2025-05-21)
+
+
+### Bug Fixes
+
+* Deno config file ([17a9c51](https://github.com/LeviSchuck/tiny-cbor/commit/17a9c5147b6918b833e83b9866e06c8f27182bc0))
+
 ## [0.3.1](https://github.com/levischuck/tiny-cbor/compare/v0.3.0...v0.3.1) (2025-05-21)
 
 
