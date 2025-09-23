@@ -1,7 +1,7 @@
 //deno-lint-ignore-file no-explicit-any
 
-import { assertEquals, assertThrows } from "jsr:@std/assert";
-import { decodeHex } from "jsr:@levischuck/tiny-encodings";
+import { assertEquals, assertThrows } from "@std/assert";
+import { decodeHex } from "@levischuck/tiny-encodings";
 import { CBORTag, decodeCBOR, decodePartialCBOR, encodeCBOR } from "./cbor.ts";
 import {
   APPLE_MACBOOK_WEBAUTHN_PAYLOAD,

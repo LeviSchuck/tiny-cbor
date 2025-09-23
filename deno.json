@@ -34,5 +34,10 @@
   "name": "@levischuck/tiny-cbor",
   "version": "0.3.1",
   "license": "MIT",
-  "exports": "./index.ts"
+  "exports": "./index.ts",
+  "imports": {
+    "@deno/dnt": "jsr:@deno/dnt@^0.42.3",
+    "@levischuck/tiny-encodings": "jsr:@levischuck/tiny-encodings@^0.2.10",
+    "@std/assert": "jsr:@std/assert@^1.0.14"
+  }
 }

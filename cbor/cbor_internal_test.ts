@@ -1,14 +1,11 @@
-import {
-  assertThrows,
-} from "https://deno.land/std@0.224.0/assert/assert_throws.ts";
-import { assertEquals } from "https://deno.land/std@0.224.0/assert/assert_equals.ts";
+import { assertEquals, assertThrows } from "@std/assert";
 import {
   decodeLength,
   encodeLength,
   MAJOR_TYPE_NEGATIVE_INTEGER,
   MAJOR_TYPE_UNSIGNED_INTEGER,
 } from "./cbor_internal.ts";
-import { decodeHex } from "https://deno.land/x/tiny_encodings@0.1.0/encoding.ts";
+import { decodeHex } from "@levischuck/tiny-encodings";
 
 function toView(data: Uint8Array): DataView {
   return new DataView(data.buffer);
