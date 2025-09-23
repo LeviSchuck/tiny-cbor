@@ -431,7 +431,10 @@ export function decodePartialCBOR(
   const prototype = Object.getPrototypeOf(data);
 
   const isArrayBuffer = prototype === ArrayBuffer.prototype;
-  const isSharedArrayBuffer = prototype === SharedArrayBuffer.prototype;
+  
+  // SharedArrayBuffer only exists when the page is viewed from a secure context.
+  const isSharedArrayBuffer = typeof SharedArrayBuffer !== "undefined" 
+    && prototype === SharedArrayBuffer.prototype
 
   if (prototype.constructor === Uint8Array.prototype.constructor) {
     return decodeNext(new DataView((data as Uint8Array).buffer), index);
