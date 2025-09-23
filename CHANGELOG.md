@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.2](https://github.com/LeviSchuck/tiny-cbor/compare/v0.3.1...v0.3.2) (2025-09-23)
+
+
+### Bug Fixes
+
+* bump ([7944c43](https://github.com/LeviSchuck/tiny-cbor/commit/7944c43d37fd45b657e53984445554e8ade8b714))
+* Deno config file ([17a9c51](https://github.com/LeviSchuck/tiny-cbor/commit/17a9c5147b6918b833e83b9866e06c8f27182bc0))
+* No need to run test twice ([4578c21](https://github.com/LeviSchuck/tiny-cbor/commit/4578c2101794e16ec51857654f1db3c4ecd9a217))
+* SharedArrayBuffer might not be available on localhost ([84955e0](https://github.com/LeviSchuck/tiny-cbor/commit/84955e06b8078455a7603851c67659e18d147d76))
+* Update to use JSR ([0240370](https://github.com/LeviSchuck/tiny-cbor/commit/0240370b7905f46b51bf817cb001ddcbb5edbf08))
+
 ## [0.3.1](https://github.com/levischuck/tiny-cbor/compare/v0.3.0...v0.3.1) (2025-05-21)
 
 
