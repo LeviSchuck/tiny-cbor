@@ -23,7 +23,6 @@ jobs:
         run: deno coverage ./coverage --lcov > coverage.lcov
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
-        env:
-          use_oidc: true
         with:
           files: ./coverage.lcov
+          use_oidc: true
