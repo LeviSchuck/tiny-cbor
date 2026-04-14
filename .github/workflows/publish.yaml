@@ -19,8 +19,9 @@ jobs:
           deno-version: v2.x
       - uses: actions/setup-node@v5
         with:
-          node-version: "22.x"
-          registry-url: "https://registry.npmjs.org"
+          node-version: '25'
+      - name: Ensure npm >= 11.5.1 for OIDC
+        run: npm install -g npm@latest
       - name: Get tag version
         id: get_tag_version
         run: echo TAG_VERSION=$(cat "version.txt") >> $GITHUB_OUTPUT
@@ -28,7 +29,7 @@ jobs:
         run: deno task npm ${{ steps.get_tag_version.outputs.TAG_VERSION }}
       - name: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: cd npm && npm publish --access public
+          NODE_AUTH_TOKEN: ''
+        run: cd npm && npm publish --provenance --access public
       - name: Publish JSR
         run: npx jsr publish
