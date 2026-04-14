@@ -337,8 +337,9 @@ function encodeNumber(data: number | bigint): (number | Uint8Array)[] {
 const ENCODER = new TextEncoder();
 
 function encodeString(data: string, output: (number | Uint8Array)[]) {
-  output.push(...encodeLength(MAJOR_TYPE_TEXT_STRING, data.length));
-  output.push(ENCODER.encode(data));
+  const encoded = ENCODER.encode(data);
+  output.push(...encodeLength(MAJOR_TYPE_TEXT_STRING, encoded.byteLength));
+  output.push(encoded);
 }
 
 function encodeBytes(data: Uint8Array, output: (number | Uint8Array)[]) {
