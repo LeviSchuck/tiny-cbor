@@ -1,0 +1,33 @@
+on:
+  release:
+    types:
+      - published
+
+name: publish
+
+jobs:
+  publish:
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: Get tag version
+        id: get_tag_version
+        run: echo TAG_VERSION=$(cat "version.txt") >> $GITHUB_OUTPUT
+      - name: npm build
+        run: deno task npm ${{ steps.get_tag_version.outputs.TAG_VERSION }}
+      - name: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: cd npm && npm publish --access public
+      - name: Publish JSR
+        run: npx jsr publish

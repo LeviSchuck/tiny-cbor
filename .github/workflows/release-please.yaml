@@ -23,34 +23,3 @@ jobs:
           token: ${{ secrets.RELEASE_PLEASE_PAT }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-      - uses: denoland/setup-deno@v2
-        if: ${{ steps.release.outputs.prs_created }}
-        with:
-          deno-version: v2.x
-      - uses: actions/checkout@v5
-        if: ${{ steps.release.outputs.prs_created || steps.release.outputs.release_created }}
-      - name: Get tag version
-        if: ${{ steps.release.outputs.release_created }}
-        id: get_tag_version
-        run: echo TAG_VERSION=$(cat "version.txt") >> $GITHUB_OUTPUT
-      - uses: denoland/setup-deno@v2
-        if: ${{ steps.release.outputs.release_created }}
-        with:
-          deno-version: v2.x
-      # When tagged, prepare it for publishing
-      - uses: actions/setup-node@v5
-        if: ${{ steps.release.outputs.release_created }}
-        with:
-          node-version: "22.x"
-          registry-url: "https://registry.npmjs.org"
-      - name: npm build
-        if: ${{ steps.release.outputs.release_created }}
-        run: deno task npm ${{steps.get_tag_version.outputs.TAG_VERSION}}
-      - name: npm publish
-        if: ${{ steps.release.outputs.release_created }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: cd npm && npm publish --access public
-      - name: Publish JSX
-        if: ${{ steps.release.outputs.release_created }}
-        run: npx jsr publish

@@ -4,6 +4,7 @@ on: push
 
 jobs:
   build:
+    if: ${{ github.ref_type != 'tag' || !(startsWith(github.ref_name, 'v') && contains(github.ref_name, '.')) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
