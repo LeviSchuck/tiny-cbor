@@ -326,7 +326,18 @@ Deno.test({
     // CBOR header: 0x69 = major type 3 (text string) + length 9
     assertEquals(
       encodeCBOR("アニメ"),
-      new Uint8Array([0x69, 0xe3, 0x82, 0xa2, 0xe3, 0x83, 0x8b, 0xe3, 0x83, 0xa1]),
+      new Uint8Array([
+        0x69,
+        0xe3,
+        0x82,
+        0xa2,
+        0xe3,
+        0x83,
+        0x8b,
+        0xe3,
+        0x83,
+        0xa1,
+      ]),
     );
   },
 });
@@ -346,7 +357,20 @@ Deno.test({
       "💛",
     );
     assertEquals(
-      decodeCBOR(new Uint8Array([0x69, 0xe3, 0x82, 0xa2, 0xe3, 0x83, 0x8b, 0xe3, 0x83, 0xa1])),
+      decodeCBOR(
+        new Uint8Array([
+          0x69,
+          0xe3,
+          0x82,
+          0xa2,
+          0xe3,
+          0x83,
+          0x8b,
+          0xe3,
+          0x83,
+          0xa1,
+        ]),
+      ),
       "アニメ",
     );
   },
