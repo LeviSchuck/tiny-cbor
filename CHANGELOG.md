@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/LeviSchuck/tiny-cbor/compare/v0.3.2...v0.3.3) (2026-04-14)
+
+
+### Bug Fixes
+
+* non-ascii strings used incorrect length ([#28](https://github.com/LeviSchuck/tiny-cbor/issues/28)) ([11106c3](https://github.com/LeviSchuck/tiny-cbor/commit/11106c33dae66dc648d6f624a1df2273f6410e47))
+
 ## [0.3.2](https://github.com/LeviSchuck/tiny-cbor/compare/v0.3.1...v0.3.2) (2025-09-23)
 
 
