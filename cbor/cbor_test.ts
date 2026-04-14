@@ -302,6 +302,88 @@ Deno.test({
   },
 });
 Deno.test({
+  name: "Can encode non-ascii strings",
+  fn() {
+    // "maíz" = 5 UTF-8 bytes: 6d 61 c3 ad 7a
+    // CBOR header: 0x65 = major type 3 (text string) + length 5
+    assertEquals(
+      encodeCBOR("maíz"),
+      new Uint8Array([0x65, 0x6d, 0x61, 0xc3, 0xad, 0x7a]),
+    );
+    // ⭐ is U+2B50, encoded as 3 bytes in UTF-8: e2 ad 90
+    // CBOR header: 0x63 = major type 3 (text string) + length 3
+    assertEquals(
+      encodeCBOR("⭐"),
+      new Uint8Array([0x63, 0xe2, 0xad, 0x90]),
+    );
+    // 💛 is U+1F49B, encoded as 4 bytes in UTF-8: f0 9f 92 9b
+    // CBOR header: 0x64 = major type 3 (text string) + length 4
+    assertEquals(
+      encodeCBOR("💛"),
+      new Uint8Array([0x64, 0xf0, 0x9f, 0x92, 0x9b]),
+    );
+    // "アニメ" = 9 UTF-8 bytes: e3 82 a2 e3 83 8b e3 83 a1
+    // CBOR header: 0x69 = major type 3 (text string) + length 9
+    assertEquals(
+      encodeCBOR("アニメ"),
+      new Uint8Array([
+        0x69,
+        0xe3,
+        0x82,
+        0xa2,
+        0xe3,
+        0x83,
+        0x8b,
+        0xe3,
+        0x83,
+        0xa1,
+      ]),
+    );
+  },
+});
+Deno.test({
+  name: "Can decode non-ascii strings",
+  fn() {
+    assertEquals(
+      decodeCBOR(new Uint8Array([0x65, 0x6d, 0x61, 0xc3, 0xad, 0x7a])),
+      "maíz",
+    );
+    assertEquals(
+      decodeCBOR(new Uint8Array([0x63, 0xe2, 0xad, 0x90])),
+      "⭐",
+    );
+    assertEquals(
+      decodeCBOR(new Uint8Array([0x64, 0xf0, 0x9f, 0x92, 0x9b])),
+      "💛",
+    );
+    assertEquals(
+      decodeCBOR(
+        new Uint8Array([
+          0x69,
+          0xe3,
+          0x82,
+          0xa2,
+          0xe3,
+          0x83,
+          0x8b,
+          0xe3,
+          0x83,
+          0xa1,
+        ]),
+      ),
+      "アニメ",
+    );
+  },
+});
+Deno.test({
+  name: "Can roundtrip non-ascii strings",
+  fn() {
+    assertEquals(decodeCBOR(encodeCBOR("maíz")), "maíz");
+    assertEquals(decodeCBOR(encodeCBOR("💛⭐")), "💛⭐");
+    assertEquals(decodeCBOR(encodeCBOR("アニメ")), "アニメ");
+  },
+});
+Deno.test({
   name: "Can decode empty byte strings",
   fn() {
     assertEquals(decodeCBOR(new Uint8Array([0x40])), new Uint8Array([]));
