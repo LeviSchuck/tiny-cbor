@@ -7,7 +7,11 @@ export function decodeLength(
     return [argument, 1];
   }
   const remainingDataLength = data.byteLength - index - 1;
-  const view = new DataView(data.buffer, index + 1);
+  const view = new DataView(
+    data.buffer,
+    data.byteOffset + index + 1,
+    remainingDataLength,
+  );
   let output: number | undefined;
   let bytes = 0;
   switch (argument) {

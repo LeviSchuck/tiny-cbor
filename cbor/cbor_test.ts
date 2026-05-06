@@ -857,3 +857,33 @@ Deno.test({
     });
   },
 });
+Deno.test({
+  name: "Can decode from a subarray of a larger Uint8Array",
+  fn() {
+    const original = decodeHex("aabb05cc");
+    // Junk: aabb .. cc
+    const sub = original.subarray(2, 3); // [0x05]
+    assertEquals(decodeCBOR(sub), 5);
+  },
+});
+Deno.test({
+  name: "Can decode length and byte string from a subarray",
+  fn() {
+    const original = decodeHex("aabb4568656c6c6fcc");
+    // Junk: aabb ... cc
+    const sub = original.subarray(2, 8);
+    assertEquals(
+      decodeCBOR(sub),
+      decodeHex("68656c6c6f"), // "hello"
+    );
+  },
+});
+Deno.test({
+  name: "Can decode a multi-byte integer from a subarray",
+  fn() {
+    const original = decodeHex("aabbcc1903e8");
+    // Junk: aabbcc
+    const sub = original.subarray(3);
+    assertEquals(decodeCBOR(sub), 1000);
+  },
+});

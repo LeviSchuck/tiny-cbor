@@ -93,9 +93,10 @@ function decodeByteString(
     throw new Error("ByteString length is too large");
   }
   const dataStartIndex = index + lengthConsumed;
+  const absoluteStart = data.byteOffset + dataStartIndex;
   return [
     new Uint8Array(
-      data.buffer.slice(dataStartIndex, dataStartIndex + lengthValue),
+      data.buffer.slice(absoluteStart, absoluteStart + lengthValue),
     ),
     lengthConsumed + lengthValue,
   ];
@@ -438,7 +439,11 @@ export function decodePartialCBOR(
     prototype === SharedArrayBuffer.prototype;
 
   if (prototype.constructor === Uint8Array.prototype.constructor) {
-    return decodeNext(new DataView((data as Uint8Array).buffer), index);
+    const u8 = data as Uint8Array;
+    return decodeNext(
+      new DataView(u8.buffer, u8.byteOffset, u8.byteLength),
+      index,
+    );
   } else if (isArrayBuffer || isSharedArrayBuffer) {
     return decodeNext(new DataView(data as ArrayBuffer), index);
   } else if (prototype === DataView.prototype) {
