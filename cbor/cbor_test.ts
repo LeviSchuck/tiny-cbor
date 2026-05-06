@@ -857,38 +857,33 @@ Deno.test({
     });
   },
 });
-
 Deno.test({
   name: "Can decode from a subarray of a larger Uint8Array",
   fn() {
-    const original = new Uint8Array([0xAA, 0xBB, 0x05, 0xCC]);
+    const original = decodeHex("aabb05cc");
+    // Junk: aabb .. cc
     const sub = original.subarray(2, 3); // [0x05]
     assertEquals(decodeCBOR(sub), 5);
   },
 });
-
 Deno.test({
   name: "Can decode length and byte string from a subarray",
   fn() {
-    const original = new Uint8Array([
-      0xAA, 0xBB,
-      0x45, 0x68, 0x65, 0x6c, 0x6c, 0x6f,
-      0xCC,
-    ]);
+    const original = decodeHex("aabb4568656c6c6fcc");
+    // Junk: aabb ... cc
     const sub = original.subarray(2, 8);
-    assertEquals(decodeCBOR(sub), new Uint8Array([0x68, 0x65, 0x6c, 0x6c, 0x6f]));
+    assertEquals(
+      decodeCBOR(sub),
+      decodeHex("68656c6c6f"), // "hello"
+    );
   },
 });
-
 Deno.test({
   name: "Can decode a multi-byte integer from a subarray",
   fn() {
-    const original = new Uint8Array([
-      0xAA, 0xBB, 0xCC,
-      0x19, 0x03, 0xe8,
-    ]);
+    const original = decodeHex("aabbcc1903e8");
+    // Junk: aabbcc
     const sub = original.subarray(3);
     assertEquals(decodeCBOR(sub), 1000);
   },
 });
-

@@ -440,7 +440,10 @@ export function decodePartialCBOR(
 
   if (prototype.constructor === Uint8Array.prototype.constructor) {
     const u8 = data as Uint8Array;
-    return decodeNext(new DataView(u8.buffer, u8.byteOffset, u8.byteLength), index);
+    return decodeNext(
+      new DataView(u8.buffer, u8.byteOffset, u8.byteLength),
+      index,
+    );
   } else if (isArrayBuffer || isSharedArrayBuffer) {
     return decodeNext(new DataView(data as ArrayBuffer), index);
   } else if (prototype === DataView.prototype) {
