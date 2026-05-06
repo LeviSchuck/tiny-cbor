@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.4](https://github.com/LeviSchuck/tiny-cbor/compare/v0.3.3...v0.3.4) (2026-05-06)
+
+
+### Bug Fixes
+
+* Support for DataViews with offsets ([297681a](https://github.com/LeviSchuck/tiny-cbor/commit/297681a2610635615336431f5f5a1a76fa8298d3))
+
 ## [0.3.3](https://github.com/LeviSchuck/tiny-cbor/compare/v0.3.2...v0.3.3) (2026-04-14)
 
 
