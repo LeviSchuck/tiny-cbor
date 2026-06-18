@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.5](https://github.com/LeviSchuck/tiny-cbor/compare/v0.3.4...v0.3.5) (2026-06-18)
+
+
+### Bug Fixes
+
+* Make it more friendly for Typescript 6 and 7 ([#32](https://github.com/LeviSchuck/tiny-cbor/issues/32)) ([3f59a47](https://github.com/LeviSchuck/tiny-cbor/commit/3f59a47b0b0e76577501c772ba928d404ba71740))
+
 ## [0.3.4](https://github.com/LeviSchuck/tiny-cbor/compare/v0.3.3...v0.3.4) (2026-05-06)
 
 
