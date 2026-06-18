@@ -23,6 +23,14 @@ await build({
     bugs: {
       url: "https://github.com/LeviSchuck/tiny-cbor/issues",
     },
+    types: "./esm/index.d.ts",
+    exports: {
+      ".": {
+        types: "./esm/index.d.ts",
+        import: "./esm/index.js",
+        require: "./script/index.js",
+      },
+    },
   },
   postBuild() {
     // steps to run after building and before running the tests
