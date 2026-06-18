@@ -37,7 +37,7 @@
   "exports": "./index.ts",
   "imports": {
     "@deno/dnt": "jsr:@deno/dnt@^0.42.3",
-    "@levischuck/tiny-encodings": "jsr:@levischuck/tiny-encodings@^0.2.11",
+    "@levischuck/tiny-encodings": "jsr:@levischuck/tiny-encodings@^0.2.13",
     "@std/assert": "jsr:@std/assert@^1.0.14"
   }
 }

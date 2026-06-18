@@ -3,7 +3,7 @@
   "specifiers": {
     "jsr:@david/code-block-writer@^13.0.3": "13.0.3",
     "jsr:@deno/dnt@~0.42.3": "0.42.3",
-    "jsr:@levischuck/tiny-encodings@~0.2.11": "0.2.11",
+    "jsr:@levischuck/tiny-encodings@~0.2.13": "0.2.13",
     "jsr:@std/assert@*": "1.0.11",
     "jsr:@std/assert@^1.0.14": "1.0.14",
     "jsr:@std/fmt@1": "1.0.8",
@@ -29,8 +29,8 @@
         "jsr:@ts-morph/bootstrap"
       ]
     },
-    "@levischuck/tiny-encodings@0.2.11": {
-      "integrity": "1590d680917d7e6eacb0dba4c58e434143f00ac75a8b5683fda5e7da095fe925"
+    "@levischuck/tiny-encodings@0.2.13": {
+      "integrity": "13b42faaa70480c346d5d4c6b541d8a7ceb5e7e443e0a78c428c951d776abdeb"
     },
     "@std/assert@1.0.11": {
       "integrity": "2461ef3c368fe88bc60e186e7744a93112f16fd110022e113a0849e94d1c83c1",
@@ -282,7 +282,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@deno/dnt@~0.42.3",
-      "jsr:@levischuck/tiny-encodings@~0.2.11",
+      "jsr:@levischuck/tiny-encodings@~0.2.13",
       "jsr:@std/assert@^1.0.14"
     ]
   }
