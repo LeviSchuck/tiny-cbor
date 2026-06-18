@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.6](https://github.com/LeviSchuck/tiny-cbor/compare/v0.3.5...v0.3.6) (2026-06-18)
+
+
+### Bug Fixes
+
+* Bump tiny-encodings for the same reason ([c32218a](https://github.com/LeviSchuck/tiny-cbor/commit/c32218a16c82e481255d812584ed019cb7c2052c))
+
 ## [0.3.5](https://github.com/LeviSchuck/tiny-cbor/compare/v0.3.4...v0.3.5) (2026-06-18)
 
 
