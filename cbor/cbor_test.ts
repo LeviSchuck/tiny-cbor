@@ -111,19 +111,66 @@ Deno.test({
   },
 });
 Deno.test({
-  name: "Rejects unsupported double byte unsigned integers",
+  name: "Can decode non-preferred integer arguments",
   fn() {
-    // Less than 24
-    assertThrows(() => {
-      decodeCBOR(new Uint8Array([0x18, 0]));
-    });
-    assertThrows(() => {
-      decodeCBOR(new Uint8Array([0x18, 23]));
-    });
-    // Not enough
-    assertThrows(() => {
-      decodeCBOR(new Uint8Array([0x19, 0]));
-    });
+    for (const [argument, width] of [[24, 1], [25, 2], [26, 4], [27, 8]]) {
+      for (const value of [0, 5, 23, 24]) {
+        const bytes = new Uint8Array(1 + width);
+        bytes[0] = argument;
+        bytes[width] = value;
+        assertEquals(decodeCBOR(bytes), value);
+        bytes[0] = 0x20 | argument;
+        assertEquals(decodeCBOR(bytes), -1 - value);
+      }
+    }
+  },
+});
+Deno.test({
+  name: "Can decode non-preferred lengths and tag arguments",
+  fn() {
+    for (const [argument, width] of [[24, 1], [25, 2], [26, 4], [27, 8]]) {
+      const head = new Uint8Array(1 + width);
+      head[width] = 1;
+
+      head[0] = 0x40 | argument;
+      assertEquals(
+        decodeCBOR(new Uint8Array([...head, 0x41])),
+        new Uint8Array([0x41]),
+      );
+      head[0] = 0x60 | argument;
+      assertEquals(decodeCBOR(new Uint8Array([...head, 0x61])), "a");
+      head[0] = 0x80 | argument;
+      assertEquals(decodeCBOR(new Uint8Array([...head, 1])), [1]);
+      head[0] = 0xa0 | argument;
+      assertEquals(
+        decodeCBOR(new Uint8Array([...head, 1, 2])),
+        new Map([[1, 2]]),
+      );
+      head[0] = 0xc0 | argument;
+      assertEquals(decodeCBOR(new Uint8Array([...head, 0])), new CBORTag(1, 0));
+
+      head[width] = 0;
+      head[0] = 0x40 | argument;
+      assertEquals(decodeCBOR(head), new Uint8Array());
+      head[0] = 0x60 | argument;
+      assertEquals(decodeCBOR(head), "");
+      head[0] = 0x80 | argument;
+      assertEquals(decodeCBOR(head), []);
+      head[0] = 0xa0 | argument;
+      assertEquals(decodeCBOR(head), new Map());
+    }
+  },
+});
+Deno.test({
+  name: "Rejects truncated integer arguments",
+  fn() {
+    for (const [argument, width] of [[24, 1], [25, 2], [26, 4], [27, 8]]) {
+      for (let length = 1; length <= width; length++) {
+        const bytes = new Uint8Array(length);
+        bytes[0] = argument;
+        assertThrows(() => decodeCBOR(bytes));
+      }
+    }
   },
 });
 Deno.test({
@@ -514,9 +561,8 @@ Deno.test({
     assertThrows(() => {
       decodeCBOR(new Uint8Array([0x98, 0x18]));
     });
-    // Less than 24
     assertThrows(() => {
-      decodeCBOR(new Uint8Array([0x98, 1, 0]));
+      decodeCBOR(new Uint8Array([0x98, 1]));
     });
   },
 });

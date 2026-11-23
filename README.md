@@ -42,6 +42,25 @@ This implementation has the following constraints:
 Maps that have duplicate keys will throw an error during decoding. Decoding data
 that is incomplete will throw an error during decoding.
 
+By default, decoding accepts non-preferred integer and length encodings, such as
+`18 05` for the integer 5. Arguments within `Number.MAX_SAFE_INTEGER` decode as
+numbers regardless of their encoded width; larger integer arguments decode as
+`bigint`s. Encoding still uses the shortest integer and length representations.
+
+### Canonical decoding
+
+For WebAuthn / passkeys or CTAP2 input, enable strict decoding:
+
+```typescript
+import { decodeCBOR } from "./index.ts";
+
+// similar for decodePartialCBOR
+const value = decodeCBOR(new Uint8Array([0xa1, 0x01, 0x02]), {
+  ctap2Canonical: true,
+});
+// Map { 1 => 2 }
+```
+
 ## Example
 
 CBOR byte decoding example, this outputs a CBORType which is up to you to ensure
