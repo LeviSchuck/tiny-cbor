@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0](https://github.com/LeviSchuck/tiny-cbor/compare/v0.3.6...v0.4.0) (2026-11-23)
+
+
+### Features
+
+* add opt-in CTAP2 canonical decoding ([#37](https://github.com/LeviSchuck/tiny-cbor/issues/37)) ([ee04806](https://github.com/LeviSchuck/tiny-cbor/commit/ee04806b8c1454f73d5e94be2eb41eb94b60b228))
+
+
+### Bug Fixes
+
+* decode non-preferred CBOR arguments and lengths ([ee04806](https://github.com/LeviSchuck/tiny-cbor/commit/ee04806b8c1454f73d5e94be2eb41eb94b60b228))
+
 ## [0.3.6](https://github.com/LeviSchuck/tiny-cbor/compare/v0.3.5...v0.3.6) (2026-06-18)
 
 
