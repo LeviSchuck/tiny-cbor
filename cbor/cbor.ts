@@ -63,6 +63,12 @@ export type CBORType =
   | CBORTag
   | Map<string | number, CBORType>;
 
+/** Options for decoding CBOR within the library's supported data model. */
+export interface DecodeCBOROptions {
+  /** Enforce CTAP2 canonical encoding and at most four nested maps/arrays. */
+  ctap2Canonical?: boolean;
+}
+
 function decodeUnsignedInteger(
   data: DataView,
   argument: number,
@@ -103,19 +109,27 @@ function decodeByteString(
 }
 
 const TEXT_DECODER = new TextDecoder();
+const STRICT_TEXT_DECODER = new TextDecoder("utf-8", {
+  fatal: true,
+  ignoreBOM: true,
+});
 function decodeString(
   data: DataView,
   argument: number,
   index: number,
+  options: DecodeCBOROptions,
 ): [string, number] {
   const [value, length] = decodeByteString(data, argument, index);
-  return [TEXT_DECODER.decode(value), length];
+  const decoder = options.ctap2Canonical ? STRICT_TEXT_DECODER : TEXT_DECODER;
+  return [decoder.decode(value), length];
 }
 
 function decodeArray(
   data: DataView,
   argument: number,
   index: number,
+  options: DecodeCBOROptions,
+  depth: number,
 ): [CBORType[], number] {
   if (argument === 0) {
     return [[], 1];
@@ -128,7 +142,12 @@ function decodeArray(
     if (remainingDataLength <= 0) {
       throw new Error("array is not supported or well formed");
     }
-    const [decodedValue, consumed] = decodeNext(data, index + consumedLength);
+    const [decodedValue, consumed] = decodeNext(
+      data,
+      index + consumedLength,
+      options,
+      depth + 1,
+    );
     value.push(decodedValue);
     consumedLength += consumed;
   }
@@ -137,10 +156,33 @@ function decodeArray(
 
 const MAP_ERROR = "Map is not supported or well formed";
 
+// CTAP2 compares major type first, then encoded length, then encoded bytes.
+// Compare the original key encodings, without normalizing or re-encoding them.
+function compareMapKeys(
+  data: DataView,
+  previous: number,
+  previousLength: number,
+  current: number,
+  currentLength: number,
+): number {
+  const majorDifference = (data.getUint8(previous) >> 5) -
+    (data.getUint8(current) >> 5);
+  if (majorDifference !== 0) return majorDifference;
+  if (previousLength !== currentLength) return previousLength - currentLength;
+  for (let offset = 0; offset < currentLength; offset++) {
+    const difference = data.getUint8(previous + offset) -
+      data.getUint8(current + offset);
+    if (difference !== 0) return difference;
+  }
+  return 0;
+}
+
 function decodeMap(
   data: DataView,
   argument: number,
   index: number,
+  options: DecodeCBOROptions,
+  depth: number,
 ): [CBORType, number] {
   if (argument === 0) {
     return [new Map(), 1];
@@ -148,13 +190,32 @@ function decodeMap(
   const [length, lengthConsumed] = decodeLength(data, argument, index);
   let consumedLength = lengthConsumed;
   const result = new Map<string | number, CBORType>();
+  let previousKeyIndex = -1;
+  let previousKeyLength = 0;
   for (let i = 0; i < length; i++) {
     let remainingDataLength = data.byteLength - index - consumedLength;
     if (remainingDataLength <= 0) {
       throw new Error(MAP_ERROR);
     }
     // Load key
-    const [key, keyConsumed] = decodeNext(data, index + consumedLength);
+    const keyIndex = index + consumedLength;
+    const [key, keyConsumed] = decodeNext(data, keyIndex, options, depth + 1);
+    if (
+      options.ctap2Canonical && previousKeyIndex >= 0 &&
+      compareMapKeys(
+          data,
+          previousKeyIndex,
+          previousKeyLength,
+          keyIndex,
+          keyConsumed,
+        ) >= 0
+    ) {
+      throw new Error(
+        "CTAP2 map keys must be in canonical order without duplicates",
+      );
+    }
+    previousKeyIndex = keyIndex;
+    previousKeyLength = keyConsumed;
     consumedLength += keyConsumed;
     remainingDataLength -= keyConsumed;
     // Check that there's enough to have a value
@@ -175,7 +236,12 @@ function decodeMap(
       throw new Error(MAP_ERROR);
     }
     // Load value
-    const [value, valueConsumed] = decodeNext(data, index + consumedLength);
+    const [value, valueConsumed] = decodeNext(
+      data,
+      index + consumedLength,
+      options,
+      depth + 1,
+    );
     consumedLength += valueConsumed;
     result.set(key, value);
   }
@@ -229,13 +295,48 @@ function decodeTag(
   return [new CBORTag(tag, value), tagBytes + valueBytes];
 }
 
-function decodeNext(data: DataView, index: number): [CBORType, number] {
+function decodeNext(
+  data: DataView,
+  index: number,
+  options: DecodeCBOROptions = {},
+  depth = 0,
+): [CBORType, number] {
   if (index >= data.byteLength) {
     throw new Error("CBOR stream ended before tag value");
   }
   const byte = data.getUint8(index);
   const majorType = byte >> 5;
   const argument = byte & 0x1f;
+  if (options.ctap2Canonical) {
+    if (majorType === MAJOR_TYPE_TAG) {
+      throw new Error("CTAP2 forbids CBOR tags");
+    }
+    if (majorType === MAJOR_TYPE_ARRAY || majorType === MAJOR_TYPE_MAP) {
+      if (depth >= 4) throw new Error("CTAP2 nesting exceeds four levels");
+    }
+    if (majorType <= MAJOR_TYPE_MAP) {
+      const [value, consumed] = decodeLength(data, argument, index);
+      const minimum = argument === 24
+        ? 24
+        : argument === 25
+        ? 256
+        : argument === 26
+        ? 65536
+        : argument === 27
+        ? 4294967296
+        : 0;
+      if (value < minimum) {
+        throw new Error("CTAP2 arguments must use the shortest encoding");
+      }
+      if (
+        (majorType === MAJOR_TYPE_BYTE_STRING ||
+          majorType === MAJOR_TYPE_TEXT_STRING) &&
+        value > data.byteLength - index - consumed
+      ) {
+        throw new Error("CBOR string extends beyond the input");
+      }
+    }
+  }
   switch (majorType) {
     case MAJOR_TYPE_UNSIGNED_INTEGER: {
       return decodeUnsignedInteger(data, argument, index);
@@ -247,13 +348,13 @@ function decodeNext(data: DataView, index: number): [CBORType, number] {
       return decodeByteString(data, argument, index);
     }
     case MAJOR_TYPE_TEXT_STRING: {
-      return decodeString(data, argument, index);
+      return decodeString(data, argument, index, options);
     }
     case MAJOR_TYPE_ARRAY: {
-      return decodeArray(data, argument, index);
+      return decodeArray(data, argument, index, options, depth);
     }
     case MAJOR_TYPE_MAP: {
-      return decodeMap(data, argument, index);
+      return decodeMap(data, argument, index, options, depth);
     }
     case MAJOR_TYPE_TAG: {
       return decodeTag(data, argument, index);
@@ -418,6 +519,7 @@ function encodePartialCBOR(data: CBORType, output: (number | Uint8Array)[]) {
  *
  * @param data a data stream to read data from
  * @param index where to start reading in the data stream
+ * @param options optional CTAP2 canonical validation
  * @returns a tuple of the value followed by bytes read.
  * @throws {Error}
  *   When the data stream ends early or the CBOR data is not well formed
@@ -425,8 +527,13 @@ function encodePartialCBOR(data: CBORType, output: (number | Uint8Array)[]) {
 export function decodePartialCBOR(
   data: DataView | Uint8Array | ArrayBuffer | ArrayBufferLike,
   index: number,
+  options: DecodeCBOROptions = {},
 ): [CBORType, number] {
-  if (data.byteLength === 0 || data.byteLength <= index || index < 0) {
+  if (
+    (options.ctap2Canonical && !Number.isInteger(index)) ||
+    data.byteLength === 0 ||
+    data.byteLength <= index || index < 0
+  ) {
     throw new Error("No data");
   }
 
@@ -443,11 +550,12 @@ export function decodePartialCBOR(
     return decodeNext(
       new DataView(u8.buffer, u8.byteOffset, u8.byteLength),
       index,
+      options,
     );
   } else if (isArrayBuffer || isSharedArrayBuffer) {
-    return decodeNext(new DataView(data as ArrayBuffer), index);
+    return decodeNext(new DataView(data as ArrayBuffer), index, options);
   } else if (prototype === DataView.prototype) {
-    return decodeNext(data as DataView, index);
+    return decodeNext(data as DataView, index, options);
   } else {
     throw new Error("Unsupported data type");
   }
@@ -475,12 +583,14 @@ export function decodePartialCBOR(
  * ```
  *
  * @param data a data stream, multiple types are supported
+ * @param options optional CTAP2 canonical validation
  * @returns
  */
 export function decodeCBOR(
   data: DataView | Uint8Array | ArrayBuffer | ArrayBufferLike,
+  options: DecodeCBOROptions = {},
 ): CBORType {
-  const [value, length] = decodePartialCBOR(data, 0);
+  const [value, length] = decodePartialCBOR(data, 0, options);
   if (length !== data.byteLength) {
     throw new Error(
       `Data was decoded, but the whole stream was not processed ${length} != ${data.byteLength}`,

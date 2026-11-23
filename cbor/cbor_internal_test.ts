@@ -40,6 +40,10 @@ Deno.test({
       9007199254740992n,
       9,
     ]);
+    assertEquals(decodeLength(toView(decodeHex("1b001fffffffffffff")), 27, 0), [
+      Number.MAX_SAFE_INTEGER,
+      9,
+    ]);
   },
 });
 
@@ -172,23 +176,14 @@ Deno.test({
       decodeLength(toView(new Uint8Array([0x18])), 24, 0);
     }, "Requires one more byte");
     assertThrows(() => {
-      decodeLength(toView(new Uint8Array([0x18, 0])), 24, 0);
-    }, "Requires one more byte, number must be > 23");
-    assertThrows(() => {
       decodeLength(toView(new Uint8Array([0x19])), 25, 0);
     }, "Requires two more bytes, two missing");
     assertThrows(() => {
       decodeLength(toView(new Uint8Array([0x19, 0])), 25, 0);
     }, "Requires two more bytes, one missing");
     assertThrows(() => {
-      decodeLength(toView(new Uint8Array([0x19, 0, 0])), 25, 0);
-    }, "Requires two more bytes, number must be > 23");
-    assertThrows(() => {
       decodeLength(toView(decodeHex("1a000f42")), 26, 0);
     }, "Requires four more bytes, missing a byte");
-    assertThrows(() => {
-      decodeLength(toView(decodeHex("1a00000017")), 26, 0);
-    }, "Requires four more bytes, must be > 23");
     assertThrows(() => {
       decodeLength(toView(decodeHex("1b000000e8d4a510")), 27, 0);
     }, "Requires eight more bytes, missing a byte");
