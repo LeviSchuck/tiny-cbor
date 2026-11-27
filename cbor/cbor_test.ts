@@ -933,3 +933,82 @@ Deno.test({
     assertEquals(decodeCBOR(sub), 1000);
   },
 });
+Deno.test({
+  name: "Rejects byte strings that extend beyond a Uint8Array view",
+  fn() {
+    // bstr(5) followed by only two bytes inside the view. The remaining
+    // bytes are outside the view but still inside the backing buffer.
+    const backing = decodeHex("450102deadbeef");
+    const view = backing.subarray(0, 3);
+    assertThrows(
+      () => decodePartialCBOR(view, 0),
+      Error,
+      "extends beyond the input",
+    );
+    assertThrows(() => decodeCBOR(view), Error, "extends beyond the input");
+  },
+});
+Deno.test({
+  name: "Rejects byte strings that extend beyond a DataView",
+  fn() {
+    // bstr(5) followed by only two bytes inside the view. The remaining
+    // bytes are outside the view but still inside the backing buffer.
+    const backing = decodeHex("450102deadbeef");
+    const view = new DataView(backing.buffer, 0, 3);
+    assertThrows(
+      () => decodePartialCBOR(view, 0),
+      Error,
+      "extends beyond the input",
+    );
+    assertThrows(() => decodeCBOR(view), Error, "extends beyond the input");
+  },
+});
+Deno.test({
+  name: "Rejects text strings that extend beyond a view",
+  fn() {
+    // text(5) "hello" followed by only two bytes inside the view.
+    const backing = decodeHex("6568656c6c6f");
+    const view = backing.subarray(0, 3);
+    assertThrows(
+      () => decodePartialCBOR(view, 0),
+      Error,
+      "extends beyond the input",
+    );
+  },
+});
+Deno.test({
+  name: "Rejects truncated strings nested in containers",
+  fn() {
+    // [1, bstr(5), ...] where the byte string runs past the end of the view.
+    const backing = decodeHex("8201450102deadbeef");
+    const view = backing.subarray(0, 4);
+    assertThrows(
+      () => decodePartialCBOR(view, 0),
+      Error,
+      "extends beyond the input",
+    );
+  },
+});
+Deno.test({
+  name: "Rejects strings that extend beyond a view starting at an offset",
+  fn() {
+    const backing = decodeHex("00450102deadbeef");
+    const view = backing.subarray(1, 4);
+    assertThrows(
+      () => decodePartialCBOR(view, 0),
+      Error,
+      "extends beyond the input",
+    );
+  },
+});
+Deno.test({
+  name: "Can decode a byte string that fills a subarray exactly",
+  fn() {
+    const backing = decodeHex("450102030405ff");
+    const view = backing.subarray(0, 6);
+    assertEquals(decodePartialCBOR(view, 0), [
+      decodeHex("0102030405"),
+      6,
+    ]);
+  },
+});
