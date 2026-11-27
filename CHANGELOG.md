@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/LeviSchuck/tiny-cbor/compare/v0.4.1...v0.4.2) (2026-11-27)
+
+
+### Bug Fixes
+
+* ci ([bf52c45](https://github.com/LeviSchuck/tiny-cbor/commit/bf52c4596fd189c8c924e6c8af5d43e192b7e62b))
+
 ## [0.4.1](https://github.com/LeviSchuck/tiny-cbor/compare/v0.4.0...v0.4.1) (2026-11-27)
 
 
