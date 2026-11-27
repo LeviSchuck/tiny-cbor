@@ -99,6 +99,9 @@ function decodeByteString(
     throw new Error("ByteString length is too large");
   }
   const dataStartIndex = index + lengthConsumed;
+  if (lengthValue > data.byteLength - dataStartIndex) {
+    throw new Error("CBOR string extends beyond the input");
+  }
   const absoluteStart = data.byteOffset + dataStartIndex;
   return [
     new Uint8Array(
@@ -315,7 +318,7 @@ function decodeNext(
       if (depth >= 4) throw new Error("CTAP2 nesting exceeds four levels");
     }
     if (majorType <= MAJOR_TYPE_MAP) {
-      const [value, consumed] = decodeLength(data, argument, index);
+      const [value] = decodeLength(data, argument, index);
       const minimum = argument === 24
         ? 24
         : argument === 25
@@ -327,13 +330,6 @@ function decodeNext(
         : 0;
       if (value < minimum) {
         throw new Error("CTAP2 arguments must use the shortest encoding");
-      }
-      if (
-        (majorType === MAJOR_TYPE_BYTE_STRING ||
-          majorType === MAJOR_TYPE_TEXT_STRING) &&
-        value > data.byteLength - index - consumed
-      ) {
-        throw new Error("CBOR string extends beyond the input");
       }
     }
   }
