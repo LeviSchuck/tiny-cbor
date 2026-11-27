@@ -19,7 +19,7 @@ jobs:
           deno-version: v2.x
       - uses: actions/setup-node@v5
         with:
-          node-version: '25'
+          node-version: '26'
       - name: Ensure npm >= 11.5.1 for OIDC
         run: npm install -g npm@latest
       - name: Get tag version
