@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/LeviSchuck/tiny-cbor/compare/v0.4.0...v0.4.1) (2026-11-27)
+
+
+### Bug Fixes
+
+* Check that we stay within slices ([#39](https://github.com/LeviSchuck/tiny-cbor/issues/39)) ([8a134d2](https://github.com/LeviSchuck/tiny-cbor/commit/8a134d27445d30cfb2c470c49f9767f2203a6c02))
+
 ## [0.4.0](https://github.com/LeviSchuck/tiny-cbor/compare/v0.3.6...v0.4.0) (2026-11-23)
 
 
